@@ -169,3 +169,73 @@ with tab3:
     
     ct_diff = ct2 - ct1
     dr_diff = dr2 - dr1
+    dt_diff = dt2 - dt1
+
+    comp1, comp2, comp3 = st.columns(3)
+    comp1.metric("Cycle Time", f"{ct2:.1f}s", delta=f"{ct_diff:.1f}s", delta_color="inverse")
+    comp2.metric("Defect Rate", f"{dr2:.1f}%", delta=f"{dr_diff:.1f}%", delta_color="inverse")
+    comp3.metric("Temps mort", f"{dt2:.1f}%", delta=f"{dt_diff:.1f}%", delta_color="inverse")
+    
+    st.markdown("<hr style='border: 0.5px solid rgba(128,128,128,0.2);'>", unsafe_allow_html=True)
+
+    kpi_names = ["Cycle Time", "Defect Rate", "Temps mort"]
+    r1_values = [ct1, dr1, dt1]
+    r2_values = [ct2, dr2, dt2]
+    
+    imp_ct = ((ct1 - ct2) / ct1 * 100) if ct1 > 0 else 0
+    imp_dr = ((dr1 - dr2) / dr1 * 100) if dr1 > 0 else 0
+    imp_dt = ((dt1 - dt2) / dt1 * 100) if dt1 > 0 else 0
+    improvements = [f"Reduced by {imp_ct:.1f}%", f"Reduced by {imp_dr:.1f}%", f"Reduced by {imp_dt:.1f}%"]
+
+    # --- TABLE ---
+    df_table = pd.DataFrame({
+        "Metric": kpi_names,
+        "Before (R1)": [f"{v:.1f}" for v in r1_values],
+        "After (R2)": [f"{v:.1f}" for v in r2_values],
+        "Result": improvements
+    })
+    st.dataframe(df_table, use_container_width=True, hide_index=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- VISUALIZATIONS ---
+    df_chart = pd.DataFrame({
+        "KPI": kpi_names * 2,
+        "Value": r1_values + r2_values,
+        "Round": ["Round 1"] * 3 + ["Round 2"] * 3
+    })
+
+    chart_col1, chart_col2, chart_col3 = st.columns(3)
+
+    def style_apple_chart(fig):
+        fig.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_family="-apple-system, BlinkMacSystemFont",
+            showlegend=False,
+            margin=dict(l=20, r=20, t=40, b=20)
+        )
+        fig.update_xaxes(showgrid=False)
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+        return fig
+
+    with chart_col1:
+        fig_ct = px.bar(df_chart[df_chart["KPI"] == "Cycle Time"], 
+                        x="Round", y="Value", color="Round", text_auto='.1f',
+                        title="Cycle Time", 
+                        color_discrete_map={"Round 1": "#86868b", "Round 2": "#0071e3"})
+        st.plotly_chart(style_apple_chart(fig_ct), use_container_width=True)
+
+    with chart_col2:
+        fig_dr = px.bar(df_chart[df_chart["KPI"] == "Defect Rate"], 
+                        x="Round", y="Value", color="Round", text_auto='.1f',
+                        title="Defect Rate",
+                        color_discrete_map={"Round 1": "#86868b", "Round 2": "#ff3b30"}) 
+        st.plotly_chart(style_apple_chart(fig_dr), use_container_width=True)
+
+    with chart_col3:
+        fig_dt = px.bar(df_chart[df_chart["KPI"] == "Temps mort"], 
+                        x="Round", y="Value", color="Round", text_auto='.1f',
+                        title="Temps mort",
+                        color_discrete_map={"Round 1": "#86868b", "Round 2": "#bf5af2"})
+        st.plotly_chart(style_apple_chart(fig_dt), use_container_width=True)
