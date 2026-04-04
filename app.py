@@ -134,7 +134,7 @@ with tab1:
         lead_time1 = st.number_input("Lead Time (sec) - R1", value=300, min_value=0, step=10)
     with col2:
         defects1 = st.number_input("Defects - R1", value=8, min_value=0, step=1)
-        downtime1 = st.number_input("Downtime (sec) - R1", value=60, min_value=0, step=5)
+        downtime1 = st.number_input("Temps mort (sec) - R1", value=60, min_value=0, step=5)
 
     ct1, dr1, dt1 = calculate_kpis(prod1, lead_time1, defects1, downtime1)
     
@@ -142,7 +142,7 @@ with tab1:
     kpi1, kpi2, kpi3 = st.columns(3)
     kpi1.metric(label="⏱️ Cycle Time", value=f"{ct1:.1f}s")
     kpi2.metric(label="⚠️ Defect Rate", value=f"{dr1:.1f}%")
-    kpi3.metric(label="🛑 Downtime", value=f"{dt1:.1f}%")
+    kpi3.metric(label="🛑 Temps mort", value=f"{dt1:.1f}%")
 
 # ==========================================
 # TAB 2: ROUND 2
@@ -156,7 +156,7 @@ with tab2:
         lead_time2 = st.number_input("Lead Time (sec) - R2", value=300, min_value=0, step=10)
     with col2:
         defects2 = st.number_input("Defects - R2", value=2, min_value=0, step=1)
-        downtime2 = st.number_input("Downtime (sec) - R2", value=30, min_value=0, step=5)
+        downtime2 = st.number_input("Temps mort (sec) - R2", value=30, min_value=0, step=5)
 
     ct2, dr2, dt2 = calculate_kpis(prod2, lead_time2, defects2, downtime2)
     
@@ -164,7 +164,7 @@ with tab2:
     kpi1, kpi2, kpi3 = st.columns(3)
     kpi1.metric(label="⏱️ Cycle Time", value=f"{ct2:.1f}s")
     kpi2.metric(label="⚠️ Defect Rate", value=f"{dr2:.1f}%")
-    kpi3.metric(label="🛑 Downtime", value=f"{dt2:.1f}%")
+    kpi3.metric(label="🛑 Temps mort", value=f"{dt2:.1f}%")
 
 # ==========================================
 # TAB 3: COMBINED
@@ -179,11 +179,11 @@ with tab3:
     comp1, comp2, comp3 = st.columns(3)
     comp1.metric("Cycle Time", f"{ct2:.1f}s", delta=f"{ct_diff:.1f}s", delta_color="inverse")
     comp2.metric("Defect Rate", f"{dr2:.1f}%", delta=f"{dr_diff:.1f}%", delta_color="inverse")
-    comp3.metric("Downtime", f"{dt2:.1f}%", delta=f"{dt_diff:.1f}%", delta_color="inverse")
+    comp3.metric("Temps mort", f"{dt2:.1f}%", delta=f"{dt_diff:.1f}%", delta_color="inverse")
     
     st.markdown("<hr style='border: 0.5px solid rgba(0,0,0,0.05);'>", unsafe_allow_html=True)
 
-    kpi_names = ["Cycle Time", "Defect Rate", "Downtime"]
+    kpi_names = ["Cycle Time", "Defect Rate", "Temps mort"]
     r1_values = [ct1, dr1, dt1]
     r2_values = [ct2, dr2, dt2]
     
@@ -239,8 +239,8 @@ with tab3:
         st.plotly_chart(style_apple_chart(fig_dr), use_container_width=True)
 
     with chart_col3:
-        fig_dt = px.bar(df_chart[df_chart["KPI"] == "Downtime"], 
+        fig_dt = px.bar(df_chart[df_chart["KPI"] == "Temps mort"], 
                         x="Round", y="Value", color="Round", text_auto='.1f',
-                        title="Downtime",
+                        title="Temps mort",
                         color_discrete_map={"Round 1": "#86868b", "Round 2": "#bf5af2"})
         st.plotly_chart(style_apple_chart(fig_dt), use_container_width=True)
