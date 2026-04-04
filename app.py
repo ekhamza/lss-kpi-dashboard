@@ -168,4 +168,4 @@ with tab3:
     st.subheader("The Results Speak for Themselves")
     
     ct_diff = ct2 - ct1
-    dr_diff = dr2 - dr
+    dr_diff = dr2 - dr1
