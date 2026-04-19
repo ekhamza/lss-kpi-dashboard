@@ -3,11 +3,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import random
+import numpy as np
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="LSS Dashboard Pro", page_icon="📈", layout="wide")
 
-# --- 2. ADAPTIVE CSS (Original Styling & Animations) ---
+# --- 2. ADAPTIVE CSS (Original Styling, Glassmorphism & Animations) ---
 st.markdown("""
     <style>
     div[data-testid="stVerticalBlock"] > div {
@@ -47,29 +48,31 @@ st.markdown("""
 col_title, col_logo = st.columns([3, 1])
 with col_title:
     st.title("Lean Six Sigma")
-    st.markdown("<p style='color: #86868b; font-size: 1.2rem; margin-top: -5px;'>Industrial Simulation - Total Performance View</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #86868b; font-size: 1.2rem; margin-top: -5px;'>Industrial Performance & Statistical Control</p>", unsafe_allow_html=True)
 with col_logo:
     st.markdown('<div class="logo-container"><div class="logo-text" style="text-align:right;">LEAN<br>SIX SIGMA</div><div class="lss-logo">Σ</div></div>', unsafe_allow_html=True)
 
 st.divider()
 
-# --- 4. CALCULATION ENGINE ---
+# --- 4. CALCULATION ENGINE (All Formulas Included) ---
 def calculate_all_metrics(u, tt, d, tm):
     if u <= 0 or tt <= 0:
         return {k: 0 for k in ["ct", "dr", "dt", "oee", "lt", "wip", "fpy", "tva", "prod"]}
     
+    # Base Cycle Time
     ct = tt / u
-    # Formulas requested:
-    tva = (tt - tm) / tt
-    fpy = (u - d) / u
-    oee = tva * 1.0 * fpy
-    lt = tt / u
-    wip = (u * ct) / tt
-    prod = u / (tt / 60)
+    
+    # Formulas from provided data
+    tva = (tt - tm) / tt           # Taux de Valeur Ajoutée
+    fpy = (u - d) / u              # First Pass Yield (Qualité)
+    oee = tva * 1.0 * fpy          # OEE (Disponibilité * Perf * Qualité)
+    lt = tt / u                    # Lead Time
+    wip = (u * ct) / tt            # Work In Progress
+    prod = u / (tt / 60)           # Productivity (Units per minute)
     
     # Original dashboard metrics
-    dr = (d / u) * 100
-    dt_rate = (tm / tt) * 100
+    dr = (d / u) * 100             # Defect Rate %
+    dt_rate = (tm / tt) * 100      # Downtime Rate %
     
     return {
         "ct": ct, "dr": dr, "dt": dt_rate,
@@ -78,10 +81,11 @@ def calculate_all_metrics(u, tt, d, tm):
     }
 
 # --- 5. TABS ---
-tab1, tab2, tab3 = st.tabs(["Round 1", "Round 2", "Detailed Comparison"])
+tab1, tab2, tab3 = st.tabs(["Round 1 (Initial)", "Round 2 (Optimisé)", "Analyse & Contrôle"])
 
 # ROUND 1
 with tab1:
+    st.subheader("Collecte des Données - Round 1")
     c1, c2 = st.columns(2)
     with c1:
         u1 = st.number_input("Unités produites (R1)", value=20, key="u1")
@@ -92,15 +96,16 @@ with tab1:
     
     res1 = calculate_all_metrics(u1, tt1, d1, tm1)
     
-    st.markdown("### Performance & Lean Metrics (R1)")
+    st.markdown("### Performance & Lean Metrics")
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Cycle Time", f"{res1['ct']:.1f}s")
     m2.metric("OEE", f"{res1['oee']:.1f}%")
     m3.metric("WIP", f"{res1['wip']:.2f}")
-    m4.metric("Prod", f"{res1['prod']:.1f}")
+    m4.metric("Prod", f"{res1['prod']:.1f} u/min")
 
 # ROUND 2
 with tab2:
+    st.subheader("Collecte des Données - Round 2")
     c3, c4 = st.columns(2)
     with c3:
         u2 = st.number_input("Unités produites (R2)", value=35, key="u2")
@@ -111,19 +116,18 @@ with tab2:
         
     res2 = calculate_all_metrics(u2, tt2, d2, tm2)
     
-    st.markdown("### Performance & Lean Metrics (R2)")
+    st.markdown("### Performance & Lean Metrics")
     m5, m6, m7, m8 = st.columns(4)
     m5.metric("Cycle Time", f"{res2['ct']:.1f}s")
     m6.metric("OEE", f"{res2['oee']:.1f}%")
     m7.metric("WIP", f"{res2['wip']:.2f}")
-    m8.metric("Prod", f"{res2['prod']:.1f}")
+    m8.metric("Prod", f"{res2['prod']:.1f} u/min")
 
-# COMBINED ANALYSIS
+# TAB 3: ANALYSIS & CONTROL CHARTS
 with tab3:
-    st.subheader("Global Process Comparison")
+    st.subheader("Analyse Comparative")
     
-    # Visual Chart Grid
-    st.markdown("### Key Improvement Charts")
+    # Comparison Bar Charts
     gv1, gv2, gv3, gv4 = st.columns(4)
     
     def bar_fig(label, r1_val, r2_val, color):
@@ -132,37 +136,51 @@ with tab3:
         fig.update_layout(title=label, showlegend=False, plot_bgcolor="rgba(0,0,0,0)")
         return fig
 
-    gv1.plotly_chart(bar_fig("OEE Progression (%)", res1['oee'], res2['oee'], "#0071e3"), use_container_width=True)
+    gv1.plotly_chart(bar_fig("Progression OEE (%)", res1['oee'], res2['oee'], "#0071e3"), use_container_width=True)
     gv2.plotly_chart(bar_fig("Lead Time (s)", res1['lt'], res2['lt'], "#5e5ce6"), use_container_width=True)
-    gv3.plotly_chart(bar_fig("WIP reduction", res1['wip'], res2['wip'], "#bf5af2"), use_container_width=True)
+    gv3.plotly_chart(bar_fig("WIP Reduction", res1['wip'], res2['wip'], "#bf5af2"), use_container_width=True)
     gv4.plotly_chart(bar_fig("Productivité", res1['prod'], res2['prod'], "#32d74b"), use_container_width=True)
 
     st.divider()
 
-    # --- FULL DUAL CONTROL CHARTS (X-BAR & R) ---
-    st.subheader("Statistical Process Control (Stability Check)")
+    # --- CONTROL CHARTS WITH UCL/LCL LINES ---
+    st.subheader("Cartes de Contrôle Statistiques (Stabilité R2)")
+    
     n_groups = 20
-    # Generate simulated data for R2
-    x_vals = [random.gauss(res2['ct'], res2['ct']*0.06) for _ in range(n_groups)]
-    r_vals = [abs(random.gauss(res2['ct']*0.1, res2['ct']*0.02)) for _ in range(n_groups)]
+    # Simulate data based on Round 2 results
+    data_x = [random.gauss(res2['ct'], res2['ct']*0.05) for _ in range(n_groups)]
+    data_r = [abs(random.gauss(res2['ct']*0.1, res2['ct']*0.03)) for _ in range(n_groups)]
+    
+    # Calculate Limits (Statistical Constants for n=5 approximation)
+    avg_x = np.mean(data_x)
+    avg_r = np.mean(data_r)
+    UCLx, LCLx = avg_x + (0.577 * avg_r), avg_x - (0.577 * avg_r)
+    UCLr, LCLr = 2.114 * avg_r, 0 # For n=5
     
     cc1, cc2 = st.columns(2)
+    
     with cc1:
+        # X-Bar Chart
         fig_x = go.Figure()
-        fig_x.add_trace(go.Scatter(y=x_vals, mode='lines+markers', name='Mean', line_color='#0071e3'))
-        fig_x.add_hline(y=sum(x_vals)/n_groups, line_color="#32d74b", annotation_text="X-Bar Mean")
-        fig_x.update_layout(title="Carte X-Bar (Cycle Time Stability)", plot_bgcolor="rgba(0,0,0,0)")
+        fig_x.add_trace(go.Scatter(y=data_x, mode='lines+markers', name='X-bar', line_color='#0071e3'))
+        fig_x.add_hline(y=avg_x, line_color="green", annotation_text="Moyenne")
+        fig_x.add_hline(y=UCLx, line_color="red", line_dash="dash", annotation_text="UCL")
+        fig_x.add_hline(y=LCLx, line_color="red", line_dash="dash", annotation_text="LCL")
+        fig_x.update_layout(title="Carte X-bar (Moyenne du Cycle Time)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_x, use_container_width=True)
         
     with cc2:
+        # R Chart
         fig_r = go.Figure()
-        fig_r.add_trace(go.Scatter(y=r_vals, mode='lines+markers', name='Range', line_color='#bf5af2'))
-        fig_r.add_hline(y=sum(r_vals)/n_groups, line_color="#ff3b30", annotation_text="R-Bar Mean")
-        fig_r.update_layout(title="Carte R (Process Variation)", plot_bgcolor="rgba(0,0,0,0)")
+        fig_r.add_trace(go.Scatter(y=data_r, mode='lines+markers', name='Range', line_color='#bf5af2'))
+        fig_r.add_hline(y=avg_r, line_color="green", annotation_text="R-bar")
+        fig_r.add_hline(y=UCLr, line_color="red", line_dash="dash", annotation_text="UCL")
+        fig_r.add_hline(y=LCLr, line_color="red", line_dash="dash", annotation_text="LCL")
+        fig_r.update_layout(title="Carte R (Étendue / Variabilité)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_r, use_container_width=True)
 
-    # Detailed Comparison Table
-    st.markdown("### Comparison Table")
+    # Detailed Table
+    st.markdown("### Tableau de Synthèse")
     labels = ["OEE (%)", "Lead Time (s)", "WIP", "Taux VA (%)", "FPY (%)", "Productivité"]
     r1_dat = [res1['oee'], res1['lt'], res1['wip'], res1['tva'], res1['fpy'], res1['prod']]
     r2_dat = [res2['oee'], res2['lt'], res2['wip'], res2['tva'], res2['fpy'], res2['prod']]
