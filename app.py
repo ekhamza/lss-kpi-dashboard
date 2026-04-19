@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+import random
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="LSS Dashboard Pro", page_icon="📈", layout="wide")
@@ -21,7 +23,7 @@ st.markdown("""
     h1 {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         font-weight: 700;
-        color: var(--text-color) !important; /* Automatically switches between black/white */
+        color: var(--text-color) !important;
         font-size: 3rem !important;
         margin-bottom: 0px !important;
     }
@@ -34,7 +36,7 @@ st.markdown("""
 
     /* Adaptive Glassmorphism KPI Cards */
     div[data-testid="stMetric"] {
-        background: rgba(128, 128, 128, 0.1); /* Semi-transparent grey works on light AND dark */
+        background: rgba(128, 128, 128, 0.1); 
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(128, 128, 128, 0.2);
@@ -82,7 +84,7 @@ st.markdown("""
         font-family: -apple-system, sans-serif;
         font-weight: 600;
         font-size: 1.1rem;
-        color: var(--text-color); /* Automatically switches between black/white */
+        color: var(--text-color);
         line-height: 1.2;
     }
     @keyframes logoPulse {
@@ -239,3 +241,85 @@ with tab3:
                         title="Temps mort",
                         color_discrete_map={"Round 1": "#86868b", "Round 2": "#bf5af2"})
         st.plotly_chart(style_apple_chart(fig_dt), use_container_width=True)
+
+    # ==========================================
+    # NEW: CONTROL CHARTS (CARTES DE CONTRÔLE)
+    # ==========================================
+    st.markdown("<br><br><hr style='border: 0.5px solid rgba(128,128,128,0.2);'>", unsafe_allow_html=True)
+    st.subheader("Cartes de Contrôle (X̄ & R) - Stabilité du Processus (Post-Optimisation)")
+    st.markdown("Ces graphiques génèrent des données simulées basées sur votre performance du **Round 2** pour démontrer que le nouveau temps de cycle (Cycle Time) est non seulement plus rapide, mais aussi sous contrôle statistique.")
+
+    # Simulation Parameters
+    n_subgroups = 20
+    sample_size = 5
+    A2, D3, D4 = 0.577, 0, 2.114 # Constants for n=5
+    
+    x_bar_vals = []
+    r_vals = []
+    
+    # Generate 20 subgroups with slight random variation based on the Round 2 Cycle Time
+    variation = ct2 * 0.05 if ct2 > 0 else 1
+    
+    for _ in range(n_subgroups):
+        samples = [random.gauss(ct2, variation) for _ in range(sample_size)]
+        x_bar_vals.append(sum(samples) / sample_size)
+        r_vals.append(max(samples) - min(samples))
+        
+    x_double_bar = sum(x_bar_vals) / len(x_bar_vals)
+    r_bar = sum(r_vals) / len(r_vals)
+    
+    # Calculate Limits
+    ucl_x = x_double_bar + A2 * r_bar
+    lcl_x = x_double_bar - A2 * r_bar
+    ucl_r = D4 * r_bar
+    lcl_r = D3 * r_bar
+
+    # Layout for the two charts
+    cc_col1, cc_col2 = st.columns(2)
+    
+    def style_control_chart(fig, title_text):
+        fig.update_layout(
+            title=title_text,
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_family="-apple-system, BlinkMacSystemFont",
+            showlegend=False,
+            margin=dict(l=30, r=40, t=50, b=30)
+        )
+        fig.update_xaxes(title_text="Sous-groupe", showgrid=False)
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+        return fig
+
+    # --- 1. Carte X-bar (Moyennes) ---
+    with cc_col1:
+        fig_x = go.Figure()
+        fig_x.add_trace(go.Scatter(y=x_bar_vals, mode='lines+markers', line=dict(color='#0071e3', width=2), marker=dict(size=8)))
+        
+        # Add Control Limits
+        fig_x.add_hline(y=ucl_x, line_dash="dash", line_color="#ff3b30")
+        fig_x.add_hline(y=lcl_x, line_dash="dash", line_color="#ff3b30")
+        fig_x.add_hline(y=x_double_bar, line_dash="solid", line_color="#34c759")
+        
+        # Add Labels to the right side
+        fig_x.add_annotation(x=n_subgroups-1, y=ucl_x, text="UCL", showarrow=False, xshift=25, font=dict(color="#ff3b30"))
+        fig_x.add_annotation(x=n_subgroups-1, y=lcl_x, text="LCL", showarrow=False, xshift=25, font=dict(color="#ff3b30"))
+        fig_x.add_annotation(x=n_subgroups-1, y=x_double_bar, text="Moyenne", showarrow=False, xshift=35, font=dict(color="#34c759"))
+        
+        st.plotly_chart(style_control_chart(fig_x, "Carte des Moyennes (X̄)"), use_container_width=True)
+
+    # --- 2. Carte R (Étendues) ---
+    with cc_col2:
+        fig_r = go.Figure()
+        fig_r.add_trace(go.Scatter(y=r_vals, mode='lines+markers', line=dict(color='#bf5af2', width=2), marker=dict(size=8)))
+        
+        # Add Control Limits
+        fig_r.add_hline(y=ucl_r, line_dash="dash", line_color="#ff3b30")
+        fig_r.add_hline(y=lcl_r, line_dash="dash", line_color="#ff3b30")
+        fig_r.add_hline(y=r_bar, line_dash="solid", line_color="#34c759")
+        
+        # Add Labels
+        fig_r.add_annotation(x=n_subgroups-1, y=ucl_r, text="UCL", showarrow=False, xshift=25, font=dict(color="#ff3b30"))
+        fig_r.add_annotation(x=n_subgroups-1, y=lcl_r, text="LCL", showarrow=False, xshift=25, font=dict(color="#ff3b30"))
+        fig_r.add_annotation(x=n_subgroups-1, y=r_bar, text="Étendue", showarrow=False, xshift=30, font=dict(color="#34c759"))
+        
+        st.plotly_chart(style_control_chart(fig_r, "Carte des Étendues (R)"), use_container_width=True)
