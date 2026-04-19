@@ -209,19 +209,18 @@ with tab3:
 
     chart_col1, chart_col2, chart_col3 = st.columns(3)
 
-    def style_control_chart(fig, title_text, y_label):
+    def style_apple_chart(fig):
         fig.update_layout(
-            title=title_text,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font_family="-apple-system, BlinkMacSystemFont",
             showlegend=False,
-            margin=dict(l=50, r=40, t=50, b=50) # Added margin for labels
+            margin=dict(l=20, r=20, t=40, b=20)
         )
-        fig.update_xaxes(title_text="Sous-groupes (n=5)", showgrid=False)
-        fig.update_yaxes(title_text=y_label, showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+        fig.update_xaxes(showgrid=False)
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
         return fig
-
+        
     with chart_col1:
         fig_ct = px.bar(df_chart[df_chart["KPI"] == "Cycle Time"], 
                         x="Round", y="Value", color="Round", text_auto='.1f',
