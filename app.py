@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import pd
 import plotly.express as px
 import plotly.graph_objects as go
 import random
@@ -8,7 +8,8 @@ import numpy as np
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="LSS Dashboard Pro", page_icon="📈", layout="wide")
 
-# --- 2. HELPER FUNCTIONS (Defined first to prevent NameErrors) ---
+# --- 2. HELPER FUNCTIONS (DEFINED FIRST TO PREVENT NAMEERROR) ---
+
 def style_control_chart(fig, title, y_label):
     """Applies consistent styling to the control charts."""
     fig.update_layout(
@@ -93,7 +94,7 @@ tab1, tab2, tab3 = st.tabs(["📊 Round 1 (Initial)", "🚀 Round 2 (Optimisé)"
 
 # ROUND 1
 with tab1:
-    st.subheader("Collecte des Données - Round 1")
+    st.subheader("Données Round 1")
     c1, c2 = st.columns(2)
     with c1:
         u1 = st.number_input("Unités produites (R1)", value=20, key="u1")
@@ -112,7 +113,7 @@ with tab1:
 
 # ROUND 2
 with tab2:
-    st.subheader("Collecte des Données - Round 2")
+    st.subheader("Données Round 2")
     c3, c4 = st.columns(2)
     with c3:
         u2 = st.number_input("Unités produites (R2)", value=35, key="u2")
@@ -129,27 +130,27 @@ with tab2:
     m7.metric("WIP", f"{res2['wip']:.2f}")
     m8.metric("Productivité", f"{res2['prod']:.1f} u/min")
 
-# TAB 3: COMPARISON & SPC
+# TAB 3: ANALYSIS & SPC
 with tab3:
     st.subheader("Analyse de l'Amélioration")
     
-    # Delta Visuals
+    # Delta Charts
     gv1, gv2, gv3, gv4 = st.columns(4)
-    def bar_fig(label, r1_val, r2_val, color):
-        fig = px.bar(x=["R1", "R2"], y=[r1_val, r2_val], color=["R1", "R2"], 
+    def create_bar(label, r1_val, r2_val, color):
+        f = px.bar(x=["R1", "R2"], y=[r1_val, r2_val], color=["R1", "R2"], 
                      color_discrete_map={"R1":"#86868b","R2":color}, height=300)
-        fig.update_layout(title=label, showlegend=False, plot_bgcolor="rgba(0,0,0,0)")
-        return fig
+        f.update_layout(title=label, showlegend=False, plot_bgcolor="rgba(0,0,0,0)")
+        return f
 
-    gv1.plotly_chart(bar_fig("OEE (%)", res1['oee'], res2['oee'], "#0071e3"), use_container_width=True)
-    gv2.plotly_chart(bar_fig("Lead Time (s)", res1['lt'], res2['lt'], "#5e5ce6"), use_container_width=True)
-    gv3.plotly_chart(bar_fig("WIP reduction", res1['wip'], res2['wip'], "#bf5af2"), use_container_width=True)
-    gv4.plotly_chart(bar_fig("Productivité", res1['prod'], res2['prod'], "#32d74b"), use_container_width=True)
+    gv1.plotly_chart(create_bar("OEE (%)", res1['oee'], res2['oee'], "#0071e3"), use_container_width=True)
+    gv2.plotly_chart(create_bar("Lead Time (s)", res1['lt'], res2['lt'], "#5e5ce6"), use_container_width=True)
+    gv3.plotly_chart(create_bar("WIP Reduction", res1['wip'], res2['wip'], "#bf5af2"), use_container_width=True)
+    gv4.plotly_chart(create_bar("Productivité", res1['prod'], res2['prod'], "#32d74b"), use_container_width=True)
 
     st.divider()
     st.subheader("Cartes de Contrôle X̄ & R (Stabilité R2)")
 
-    # SPC Data Generation
+    # SPC Logic
     n_groups = 20
     x_vals = [random.gauss(res2['ct'], res2['ct']*0.04) for _ in range(n_groups)]
     r_vals = [abs(random.gauss(res2['ct']*0.08, res2['ct']*0.02)) for _ in range(n_groups)]
@@ -158,7 +159,7 @@ with tab3:
     UCLx, LCLx = avg_x + (0.577 * avg_r), avg_x - (0.577 * avg_r)
     UCLr, LCLr = 2.114 * avg_r, 0
 
-    # INTERPRETATION LOGIC
+    # Interpretation Status
     if all(LCLx < x < UCLx for x in x_vals):
         st.success("✅ **INTERPRÉTATION :** Processus sous contrôle statistique")
     else:
@@ -181,16 +182,16 @@ with tab3:
         fig_r.add_hline(y=LCLr, line_color="red", line_dash="dash", annotation_text="LCL")
         st.plotly_chart(style_control_chart(fig_r, "Carte des Étendues (R)", "Variation (s)"), use_container_width=True)
 
-    # Comparison Table Summary
-    st.markdown("### Synthèse des Métriques")
-    labels = ["OEE (%)", "Lead Time (s)", "WIP", "Taux VA (%)", "FPY (%)", "Productivité"]
-    r1_dat = [res1['oee'], res1['lt'], res1['wip'], res1['tva'], res1['fpy'], res1['prod']]
-    r2_dat = [res2['oee'], res2['lt'], res2['wip'], res2['tva'], res2['fpy'], res2['prod']]
+    # Detailed Summary Table
+    st.markdown("### Synthèse Complète")
+    met_labels = ["OEE (%)", "Lead Time (s)", "WIP", "Taux VA (%)", "FPY (%)", "Productivité"]
+    r1_list = [res1['oee'], res1['lt'], res1['wip'], res1['tva'], res1['fpy'], res1['prod']]
+    r2_list = [res2['oee'], res2['lt'], res2['wip'], res2['tva'], res2['fpy'], res2['prod']]
     
-    df = pd.DataFrame({
-        "Métrique": labels,
-        "Round 1": [f"{v:.2f}" for v in r1_dat],
-        "Round 2": [f"{v:.2f}" for v in r2_dat],
-        "Amélioration": [f"{((r2_dat[i]-r1_dat[i])/r1_dat[i]*100):+.1f}%" if r1_dat[i] != 0 else "0%" for i in range(len(labels))]
+    df_final = pd.DataFrame({
+        "Métrique": met_labels,
+        "Avant (R1)": [f"{v:.2f}" for v in r1_list],
+        "Après (R2)": [f"{v:.2f}" for v in r2_list],
+        "Impact (%)": [f"{((r2_list[i]-r1_list[i])/r1_list[i]*100):+.1f}%" if r1_list[i] != 0 else "0%" for i in range(len(met_labels))]
     })
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df_final, use_container_width=True, hide_index=True)
