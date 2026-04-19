@@ -323,3 +323,6 @@ with tab3:
         fig_r.add_annotation(x=n_subgroups-1, y=r_bar, text="Étendue", showarrow=False, xshift=30, font=dict(color="#34c759"))
         
         st.plotly_chart(style_control_chart(fig_r, "Carte des Étendues (R)"), use_container_width=True)
+        # Add this inside the style_control_chart function in your code:
+fig.update_xaxes(title_text="Subgroups (Groups of 5 Samples)")
+fig.update_yaxes(title_text="Seconds (Time)")
