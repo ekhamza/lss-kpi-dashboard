@@ -4,209 +4,313 @@ import plotly.express as px
 import plotly.graph_objects as go
 import random
 
-# --- CONFIGURATION INITIALE ---
-st.set_page_config(
-    page_title="Lean Six Sigma Dashboard",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+# --- PAGE CONFIGURATION ---
+st.set_page_config(page_title="LSS Dashboard Pro", page_icon="📈", layout="wide")
 
-# --- CSS PERSONNALISÉ (Style Apple / Glassmorphism) ---
-# Ce bloc assure l'esthétique minimaliste et professionnelle
+# --- ADAPTIVE CSS FOR LIGHT/DARK MODE ---
 st.markdown("""
     <style>
-    /* Animation d'entrée */
-    .stApp {
-        animation: fadeIn 1.2s ease-in-out;
+    /* TAB SWITCHING ANIMATION */
+    div[data-testid="stVerticalBlock"] > div {
+        animation: tabFadeIn 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+    @keyframes tabFadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Titres et Typographie */
+    /* Apple-style bold clean headers */
     h1 {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         font-weight: 700;
-        letter-spacing: -0.05rem;
+        color: var(--text-color) !important;
+        font-size: 3rem !important;
         margin-bottom: 0px !important;
     }
-    .subtitle {
-        color: #86868b;
-        font-size: 1.2rem;
-        font-weight: 400;
-        margin-top: -10px;
-        margin-bottom: 30px;
+    
+    h3 {
+        font-weight: 600;
+        color: var(--text-color) !important; 
+        margin-top: 1.5rem !important;
     }
 
-    /* Cartes KPI Glassmorphism */
+    /* Adaptive Glassmorphism KPI Cards */
     div[data-testid="stMetric"] {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(128, 128, 128, 0.1); 
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 20px !important;
-        transition: transform 0.3s ease;
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        border-radius: 18px;
+        padding: 20px 25px !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     }
+    
     div[data-testid="stMetric"]:hover {
         transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.2);
+        background: rgba(128, 128, 128, 0.15);
+    }
+    
+    .stDataFrame {
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
 
-    /* Onglets / Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
+    /* PURE CSS ANIMATED LOGO */
+    .logo-container {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 15px;
     }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        background-color: transparent;
-        border-radius: 10px;
-        color: #86868b;
-        font-weight: 500;
+    .lss-logo {
+        width: 65px;
+        height: 65px;
+        background: linear-gradient(135deg, #0071e3 0%, #bf5af2 100%);
+        border-radius: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 32px;
+        font-weight: bold;
+        font-family: -apple-system, sans-serif;
+        box-shadow: 0 10px 20px rgba(0, 113, 227, 0.2);
+        animation: logoPulse 2.5s infinite alternate ease-in-out;
     }
-    .stTabs [aria-selected="true"] {
-        background-color: rgba(0, 113, 227, 0.1) !important;
-        color: #0071e3 !important;
+    .logo-text {
+        font-family: -apple-system, sans-serif;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-color);
+        line-height: 1.2;
+    }
+    @keyframes logoPulse {
+        0% { transform: scale(1); box-shadow: 0 5px 15px rgba(0, 113, 227, 0.2); }
+        100% { transform: scale(1.05); box-shadow: 0 15px 30px rgba(191, 90, 242, 0.4); }
     }
     </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# SECTION 1 : INTRODUCTION DMAIC (Nouveau)
-# ==========================================
-st.title("Simulation Lean Six Sigma")
-st.markdown("<div class='subtitle'>Optimisation Industrielle – Approche DMAIC</div>", unsafe_allow_html=True)
+# --- HEADER SECTION WITH ANIMATED LOGO ---
+col_title, col_logo = st.columns([3, 1])
+with col_title:
+    st.title("Lean Six Sigma")
+    st.markdown("<p style='color: #86868b; font-size: 1.2rem; margin-top: -5px;'>Experience the power of efficiency.</p>", unsafe_allow_html=True)
+with col_logo:
+    st.markdown("""
+        <div class="logo-container">
+            <div class="logo-text">LEAN<br>SIX SIGMA</div>
+            <div class="lss-logo">Σ</div>
+        </div>
+    """, unsafe_allow_html=True)
 
+# ==========================================
+# NEW INTEGRATION: DMAIC APPROACH & GOALS
+# ==========================================
+st.markdown("### Simulation Lean Six Sigma – Approche DMAIC")
 st.markdown("""
-Cette application simule une ligne de production (votre projet de station de lavage ou logistique) 
-pour analyser l'impact du **Lean Six Sigma** sur la performance globale.
+Cette application simule une ligne de production avec et sans Lean Six Sigma  
+afin d’analyser l’impact sur la performance industrielle.
 """)
 
-# Objectifs visuels
-col_obj1, col_obj2, col_obj3 = st.columns(3)
-with col_obj1:
-    st.success("⏱ **Réduire le temps** (Cycle Time)")
-with col_obj2:
-    st.error("❌ **Réduire les défauts** (Qualité)")
-with col_obj3:
-    st.info("📈 **Améliorer la productivité**")
+col_g1, col_g2, col_g3 = st.columns(3)
+col_g1.success("⏱ **Réduire le temps**")
+col_g2.error("❌ **Réduire les défauts**")
+col_g3.info("📈 **Améliorer la productivité**")
 
 st.divider()
 
-# ==========================================
-# SECTION 2 : LOGIQUE DE CALCUL & STYLE
-# ==========================================
-def calculate_metrics(production, lead_time, defects, downtime):
-    # Calculs basés sur vos besoins en génie industriel
-    ct = lead_time / production if production > 0 else 0
-    dr = (defects / production) * 100 if production > 0 else 0
-    dt = (downtime / lead_time) * 100 if lead_time > 0 else 0
-    return ct, dr, dt
+# --- CALCULATION FUNCTION ---
+def calculate_kpis(production, lead_time, defects, downtime):
+    cycle_time = lead_time / production if production > 0 else 0
+    defect_rate = (defects / production) * 100 if production > 0 else 0
+    downtime_rate = (downtime / lead_time) * 100 if lead_time > 0 else 0
+    return cycle_time, defect_rate, downtime_rate
 
-def apply_chart_style(fig, title, y_label):
-    fig.update_layout(
-        title=title,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_family="-apple-system",
-        margin=dict(l=40, r=40, t=60, b=40),
-        hovermode="x unified"
-    )
-    fig.update_xaxes(showgrid=False, linecolor='rgba(128,128,128,0.2)')
-    fig.update_yaxes(title_text=y_label, showgrid=True, gridcolor='rgba(128,128,128,0.1)')
-    return fig
+# --- TABS SETUP ---
+tab1, tab2, tab3 = st.tabs(["Round 1", "Round 2", "Combined"])
 
 # ==========================================
-# SECTION 3 : INTERFACE UTILISATEUR (TABS)
+# TAB 1: ROUND 1
 # ==========================================
-t1, t2, t3 = st.tabs(["📊 Round 1 (Initial)", "🚀 Round 2 (Optimisé)", "🏆 Comparaison & Contrôle"])
+with tab1:
+    st.subheader("Initial Data Collection")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        prod1 = st.number_input("Production (Units) - R1", value=20, min_value=0, step=1)
+        lead_time1 = st.number_input("Lead Time (sec) - R1", value=300, min_value=0, step=10)
+    with col2:
+        defects1 = st.number_input("Defects - R1", value=8, min_value=0, step=1)
+        downtime1 = st.number_input("Temps mort (sec) - R1", value=60, min_value=0, step=5)
 
-# --- ROUND 1 ---
-with t1:
-    st.subheader("Données de Base (Situation Actuelle)")
-    c1, c2 = st.columns(2)
-    with c1:
-        p1 = st.number_input("Unités produites (R1)", value=20, key="p1")
-        lt1 = st.number_input("Temps total (sec) (R1)", value=300, key="lt1")
-    with c2:
-        def1 = st.number_input("Nombre de défauts (R1)", value=8, key="def1")
-        dt1 = st.number_input("Temps mort (sec) (R1)", value=60, key="dt1")
+    ct1, dr1, dt1 = calculate_kpis(prod1, lead_time1, defects1, downtime1)
     
-    res_ct1, res_dr1, res_dt1 = calculate_metrics(p1, lt1, def1, dt1)
-    
-    # Affichage immédiat
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Cycle Time", f"{res_ct1:.1f}s")
-    m2.metric("Defect Rate", f"{res_dr1:.1f}%")
-    m3.metric("Downtime", f"{res_dt1:.1f}%")
+    st.markdown("### Measured Performance")
+    kpi1, kpi2, kpi3 = st.columns(3)
+    kpi1.metric(label="⏱️ Cycle Time", value=f"{ct1:.1f}s")
+    kpi2.metric(label="⚠️ Defect Rate", value=f"{dr1:.1f}%")
+    kpi3.metric(label="🛑 Temps mort", value=f"{dt1:.1f}%")
 
-# --- ROUND 2 ---
-with t2:
-    st.subheader("Données après Amélioration (Future)")
-    c3, c4 = st.columns(2)
-    with c3:
-        p2 = st.number_input("Unités produites (R2)", value=35, key="p2")
-        lt2 = st.number_input("Temps total (sec) (R2)", value=300, key="lt2")
-    with c4:
-        def2 = st.number_input("Nombre de défauts (R2)", value=2, key="def2")
-        dt2 = st.number_input("Temps mort (sec) (R2)", value=30, key="dt2")
-        
-    res_ct2, res_dr2, res_dt2 = calculate_metrics(p2, lt2, def2, dt2)
+# ==========================================
+# TAB 2: ROUND 2
+# ==========================================
+with tab2:
+    st.subheader("Post-Optimization Data")
+    col1, col2 = st.columns(2)
     
-    m4, m5, m6 = st.columns(3)
-    m4.metric("Cycle Time", f"{res_ct2:.1f}s")
-    m5.metric("Defect Rate", f"{res_dr2:.1f}%")
-    m6.metric("Downtime", f"{res_dt2:.1f}%")
+    with col1:
+        prod2 = st.number_input("Production (Units) - R2", value=35, min_value=0, step=1)
+        lead_time2 = st.number_input("Lead Time (sec) - R2", value=300, min_value=0, step=10)
+    with col2:
+        defects2 = st.number_input("Defects - R2", value=2, min_value=0, step=1)
+        downtime2 = st.number_input("Temps mort (sec) - R2", value=30, min_value=0, step=5)
 
-# --- COMPARISON & CONTROL CHARTS ---
-with t3:
-    st.subheader("Analyse de l'Amélioration")
+    ct2, dr2, dt2 = calculate_kpis(prod2, lead_time2, defects2, downtime2)
     
-    # KPIs Comparatifs
-    k1, k2, k3 = st.columns(3)
-    k1.metric("Cycle Time", f"{res_ct2:.1f}s", delta=f"{res_ct2-res_ct1:.1f}s", delta_color="inverse")
-    k2.metric("Defect Rate", f"{res_dr2:.1f}%", delta=f"{res_dr2-res_dr1:.1f}%", delta_color="inverse")
-    k3.metric("Downtime", f"{res_dt2:.1f}%", delta=f"{res_dt2-res_dt1:.1f}%", delta_color="inverse")
+    st.markdown("### Measured Performance")
+    kpi1, kpi2, kpi3 = st.columns(3)
+    kpi1.metric(label="⏱️ Cycle Time", value=f"{ct2:.1f}s")
+    kpi2.metric(label="⚠️ Defect Rate", value=f"{dr2:.1f}%")
+    kpi3.metric(label="🛑 Temps mort", value=f"{dt2:.1f}%")
 
-    st.markdown("---")
+# ==========================================
+# TAB 3: COMBINED
+# ==========================================
+with tab3:
+    st.subheader("The Results Speak for Themselves")
     
-    # Cartes de Contrôle (Statistique Industrielle)
-    st.subheader("Cartes de Contrôle $\\bar{X}$ & $R$ (Stabilité)")
-    st.info("Ces graphiques utilisent une simulation de 20 sous-groupes basée sur vos résultats du Round 2.")
+    ct_diff = ct2 - ct1
+    dr_diff = dr2 - dr1
+    dt_diff = dt2 - dt1
+
+    comp1, comp2, comp3 = st.columns(3)
+    comp1.metric("Cycle Time", f"{ct2:.1f}s", delta=f"{ct_diff:.1f}s", delta_color="inverse")
+    comp2.metric("Defect Rate", f"{dr2:.1f}%", delta=f"{dr_diff:.1f}%", delta_color="inverse")
+    comp3.metric("Temps mort", f"{dt2:.1f}%", delta=f"{dt_diff:.1f}%", delta_color="inverse")
     
-    # Simulation logic
+    st.markdown("<hr style='border: 0.5px solid rgba(128,128,128,0.2);'>", unsafe_allow_html=True)
+
+    kpi_names = ["Cycle Time", "Defect Rate", "Temps mort"]
+    r1_values = [ct1, dr1, dt1]
+    r2_values = [ct2, dr2, dt2]
+    
+    imp_ct = ((ct1 - ct2) / ct1 * 100) if ct1 > 0 else 0
+    imp_dr = ((dr1 - dr2) / dr1 * 100) if dr1 > 0 else 0
+    imp_dt = ((dt1 - dt2) / dt1 * 100) if dt1 > 0 else 0
+    improvements = [f"Reduced by {imp_ct:.1f}%", f"Reduced by {imp_dr:.1f}%", f"Reduced by {imp_dt:.1f}%"]
+
+    # --- TABLE ---
+    df_table = pd.DataFrame({
+        "Metric": kpi_names,
+        "Before (R1)": [f"{v:.1f}" for v in r1_values],
+        "After (R2)": [f"{v:.1f}" for v in r2_values],
+        "Result": improvements
+    })
+    st.dataframe(df_table, use_container_width=True, hide_index=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- VISUALIZATIONS ---
+    df_chart = pd.DataFrame({
+        "KPI": kpi_names * 2,
+        "Value": r1_values + r2_values,
+        "Round": ["Round 1"] * 3 + ["Round 2"] * 3
+    })
+
+    chart_col1, chart_col2, chart_col3 = st.columns(3)
+
+    def style_apple_chart(fig):
+        fig.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_family="-apple-system, BlinkMacSystemFont",
+            showlegend=False,
+            margin=dict(l=20, r=20, t=40, b=20)
+        )
+        fig.update_xaxes(showgrid=False)
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+        return fig
+
+    with chart_col1:
+        fig_ct = px.bar(df_chart[df_chart["KPI"] == "Cycle Time"], 
+                        x="Round", y="Value", color="Round", text_auto='.1f',
+                        title="Cycle Time", 
+                        color_discrete_map={"Round 1": "#86868b", "Round 2": "#0071e3"})
+        st.plotly_chart(style_apple_chart(fig_ct), use_container_width=True)
+
+    with chart_col2:
+        fig_dr = px.bar(df_chart[df_chart["KPI"] == "Defect Rate"], 
+                        x="Round", y="Value", color="Round", text_auto='.1f',
+                        title="Defect Rate",
+                        color_discrete_map={"Round 1": "#86868b", "Round 2": "#ff3b30"}) 
+        st.plotly_chart(style_apple_chart(fig_dr), use_container_width=True)
+
+    with chart_col3:
+        fig_dt = px.bar(df_chart[df_chart["KPI"] == "Temps mort"], 
+                        x="Round", y="Value", color="Round", text_auto='.1f',
+                        title="Temps mort",
+                        color_discrete_map={"Round 1": "#86868b", "Round 2": "#bf5af2"})
+        st.plotly_chart(style_apple_chart(fig_dt), use_container_width=True)
+
+    # ==========================================
+    # CONTROL CHARTS (CARTES DE CONTRÔLE)
+    # ==========================================
+    st.markdown("<br><br><hr style='border: 0.5px solid rgba(128,128,128,0.2);'>", unsafe_allow_html=True)
+    st.subheader("Cartes de Contrôle (X̄ & R) - Stabilité du Processus (Post-Optimisation)")
+    st.markdown("Ces graphiques génèrent des données simulées basées sur votre performance du **Round 2**.")
+
+    # Simulation Parameters
     n_subgroups = 20
-    x_bar, r_val = [], []
-    sigma = res_ct2 * 0.05 if res_ct2 > 0 else 1
+    sample_size = 5
+    A2, D3, D4 = 0.577, 0, 2.114 # Constants for n=5
+    
+    x_bar_vals = []
+    r_vals = []
+    variation = ct2 * 0.05 if ct2 > 0 else 1
     
     for _ in range(n_subgroups):
-        samples = [random.gauss(res_ct2, sigma) for _ in range(5)]
-        x_bar.append(sum(samples)/5)
-        r_val.append(max(samples)-min(samples))
+        samples = [random.gauss(ct2, variation) for _ in range(sample_size)]
+        x_bar_vals.append(sum(samples) / sample_size)
+        r_vals.append(max(samples) - min(samples))
         
-    # Calcul des limites (Constantes pour n=5: A2=0.577, D4=2.114)
-    x_double_bar = sum(x_bar)/20
-    r_bar = sum(r_val)/20
-    ucl_x, lcl_x = x_double_bar + 0.577*r_bar, x_double_bar - 0.577*r_bar
-    ucl_r = 2.114 * r_bar
+    x_double_bar = sum(x_bar_vals) / len(x_bar_vals)
+    r_bar = sum(r_vals) / len(r_vals)
+    ucl_x = x_double_bar + A2 * r_bar
+    lcl_x = x_double_bar - A2 * r_bar
+    ucl_r = D4 * r_bar
+    lcl_r = D3 * r_bar
+
+    cc_col1, cc_col2 = st.columns(2)
     
-    gc1, gc2 = st.columns(2)
-    
-    with gc1:
+    def style_control_chart(fig, title_text):
+        fig.update_layout(
+            title=title_text,
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font_family="-apple-system, BlinkMacSystemFont",
+            showlegend=False,
+            margin=dict(l=30, r=40, t=50, b=30)
+        )
+        fig.update_xaxes(title_text="Sous-groupe", showgrid=False)
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+        return fig
+
+    with cc_col1:
         fig_x = go.Figure()
-        fig_x.add_trace(go.Scatter(y=x_bar, mode='lines+markers', line_color='#0071e3', name='Moyenne'))
-        fig_x.add_hline(y=ucl_x, line_dash="dash", line_color="#ff3b30", annotation_text="UCL")
-        fig_x.add_hline(y=lcl_x, line_dash="dash", line_color="#ff3b30", annotation_text="LCL")
-        fig_x.add_hline(y=x_double_bar, line_color="#34c759", annotation_text="X̄")
-        st.plotly_chart(apply_chart_style(fig_x, "Carte des Moyennes ($\\bar{X}$)", "Secondes"), use_container_width=True)
+        fig_x.add_trace(go.Scatter(y=x_bar_vals, mode='lines+markers', line=dict(color='#0071e3', width=2), marker=dict(size=8)))
+        fig_x.add_hline(y=ucl_x, line_dash="dash", line_color="#ff3b30")
+        fig_x.add_hline(y=lcl_x, line_dash="dash", line_color="#ff3b30")
+        fig_x.add_hline(y=x_double_bar, line_dash="solid", line_color="#34c759")
+        st.plotly_chart(style_control_chart(fig_x, "Carte des Moyennes (X̄)"), use_container_width=True)
 
-    with gc2:
+    with cc_col2:
         fig_r = go.Figure()
-        fig_r.add_trace(go.Scatter(y=r_val, mode='lines+markers', line_color='#bf5af2', name='Étendue'))
-        fig_r.add_hline(y=ucl_r, line_dash="dash", line_color="#ff3b30", annotation_text="UCL")
-        fig_r.add_hline(y=r_bar, line_color="#34c759", annotation_text="R̄")
-        st.plotly_chart(apply_chart_style(fig_r, "Carte des Étendues ($R$)", "Variation (sec)"), use_container_width=True)
-
-    # Footer minimalist
-    st.markdown("<br><p style='text-align: center; color: #86868b;'>Lean Six Sigma Dashboard | DMAIC Approach</p>", unsafe_allow_html=True)
+        fig_r.add_trace(go.Scatter(y=r_vals, mode='lines+markers', line=dict(color='#bf5af2', width=2), marker=dict(size=8)))
+        fig_r.add_hline(y=ucl_r, line_dash="dash", line_color="#ff3b30")
+        fig_r.add_hline(y=lcl_r, line_dash="dash", line_color="#ff3b30")
+        fig_r.add_hline(y=r_bar, line_dash="solid", line_color="#34c759")
+        st.plotly_chart(style_control_chart(fig_r, "Carte des Étendues (R)"), use_container_width=True)
