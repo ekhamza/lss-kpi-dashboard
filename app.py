@@ -5,13 +5,13 @@ import plotly.graph_objects as go
 import random
 import numpy as np
 
-# --- 1. PAGE CONFIGURATION ---
+# --- 1. CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="LSS Dashboard Pro", page_icon="📈", layout="wide")
 
-# --- 2. HELPER FUNCTIONS (DEFINED FIRST TO PREVENT NAMEERROR) ---
+# --- 2. FONCTIONS UTILES (Définies au début pour éviter les erreurs) ---
 
 def style_control_chart(fig, title, y_label):
-    """Applies consistent styling to the control charts."""
+    """Applique un style professionnel aux cartes de contrôle."""
     fig.update_layout(
         title=title,
         yaxis_title=y_label,
@@ -25,173 +25,158 @@ def style_control_chart(fig, title, y_label):
     return fig
 
 def calculate_all_metrics(u, tt, d, tm):
-    """Calculates all original and new Lean/Industrial metrics."""
+    """Calcule l'ensemble des indicateurs Lean et Industriels."""
     if u <= 0 or tt <= 0:
         return {k: 0 for k in ["ct", "dr", "dt", "oee", "lt", "wip", "fpy", "tva", "prod"]}
     
     ct = tt / u
     tva = (tt - tm) / tt           # Taux de Valeur Ajoutée
-    fpy = (u - d) / u              # First Pass Yield
-    oee = tva * 1.0 * fpy          # OEE (Disponibilité * Performance * Qualité)
+    fpy = (u - d) / u              # First Pass Yield (Qualité)
+    oee = tva * 1.0 * fpy          # OEE (Dispo * Perf * Qualité)
     lt = tt / u                    # Lead Time
     wip = (u * ct) / tt            # Work In Progress
     prod = u / (tt / 60)           # Productivité (u/min)
-    dr = (d / u) * 100             # Defect Rate
-    dt_rate = (tm / tt) * 100      # Downtime Rate
     
     return {
-        "ct": ct, "dr": dr, "dt": dt_rate,
+        "ct": ct, "dr": (d/u)*100, "dt": (tm/tt)*100,
         "oee": oee * 100, "lt": lt, "wip": wip,
         "fpy": fpy * 100, "tva": tva * 100, "prod": prod
     }
 
-# --- 3. ADAPTIVE CSS ---
+# --- 3. STYLE CSS ADAPTATIF ---
 st.markdown("""
     <style>
-    div[data-testid="stVerticalBlock"] > div {
-        animation: tabFadeIn 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-    }
-    @keyframes tabFadeIn {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    h1 { font-family: -apple-system, sans-serif; font-weight: 700; font-size: 3rem !important; }
-    
-    /* Glassmorphism KPI Cards */
     div[data-testid="stMetric"] {
-        background: rgba(128, 128, 128, 0.1); 
-        backdrop-filter: blur(10px);
+        background: rgba(128, 128, 128, 0.05); 
         border: 1px solid rgba(128, 128, 128, 0.2);
-        border-radius: 18px;
-        padding: 20px 25px !important;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+        padding: 15px !important;
     }
-    
     .lss-logo {
-        width: 65px; height: 65px;
+        width: 60px; height: 60px;
         background: linear-gradient(135deg, #0071e3 0%, #bf5af2 100%);
-        border-radius: 16px;
+        border-radius: 12px;
         display: flex; justify-content: center; align-items: center;
-        color: white; font-size: 32px; font-weight: bold;
-        animation: logoPulse 2.5s infinite alternate ease-in-out;
+        color: white; font-size: 28px; font-weight: bold;
     }
-    @keyframes logoPulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 4. HEADER ---
+# --- 4. EN-TÊTE ---
 col_t, col_l = st.columns([3, 1])
 with col_t:
     st.title("Lean Six Sigma")
-    st.markdown("<p style='color: #86868b; font-size: 1.2rem; margin-top: -5px;'>Optimisation Industrielle - Station de Lavage</p>", unsafe_allow_html=True)
+    st.write("Optimisation Industrielle & Maîtrise Statistique des Procédés (MSP/SPC)")
 with col_l:
     st.markdown('<div style="display: flex; justify-content: flex-end;"><div class="lss-logo">Σ</div></div>', unsafe_allow_html=True)
 
-st.divider()
+# --- 5. ONGLETS ---
+tab1, tab2, tab3 = st.tabs(["📊 Round 1 (Initial)", "🚀 Round 2 (Optimisé)", "🏆 Analyse SPC & Stabilité"])
 
-# --- 5. TABS ---
-tab1, tab2, tab3 = st.tabs(["📊 Round 1 (Initial)", "🚀 Round 2 (Optimisé)", "🏆 Comparaison & Contrôle"])
-
-# ROUND 1
 with tab1:
-    st.subheader("Données Round 1")
     c1, c2 = st.columns(2)
-    with c1:
-        u1 = st.number_input("Unités produites (R1)", value=20, key="u1")
-        tt1 = st.number_input("Temps total (sec) (R1)", value=300, key="tt1")
-    with c2:
-        d1 = st.number_input("Défauts (R1)", value=8, key="d1")
-        tm1 = st.number_input("Temps mort (sec) (R1)", value=60, key="tm1")
+    u1 = c1.number_input("Unités produites (R1)", value=20)
+    tt1 = c2.number_input("Temps total (sec) (R1)", value=300)
+    d1 = c1.number_input("Défauts (R1)", value=8)
+    tm1 = c2.number_input("Temps mort (sec) (R1)", value=60)
     res1 = calculate_all_metrics(u1, tt1, d1, tm1)
-    
-    st.markdown("### Performance Mesurée")
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Cycle Time", f"{res1['ct']:.1f}s")
-    m2.metric("OEE", f"{res1['oee']:.1f}%")
-    m3.metric("WIP", f"{res1['wip']:.2f}")
-    m4.metric("Productivité", f"{res1['prod']:.1f} u/min")
 
-# ROUND 2
 with tab2:
-    st.subheader("Données Round 2")
     c3, c4 = st.columns(2)
-    with c3:
-        u2 = st.number_input("Unités produites (R2)", value=35, key="u2")
-        tt2 = st.number_input("Temps total (sec) (R2)", value=300, key="tt2")
-    with c4:
-        d2 = st.number_input("Défauts (R2)", value=2, key="d2")
-        tm2 = st.number_input("Temps mort (sec) (R2)", value=30, key="tm2")
+    u2 = c3.number_input("Unités produites (R2)", value=35)
+    tt2 = c4.number_input("Temps total (sec) (R2)", value=300)
+    d2 = c3.number_input("Défauts (R2)", value=2)
+    tm2 = c4.number_input("Temps mort (sec) (R2)", value=30)
     res2 = calculate_all_metrics(u2, tt2, d2, tm2)
-    
-    st.markdown("### Performance Mesurée")
-    m5, m6, m7, m8 = st.columns(4)
-    m5.metric("Cycle Time", f"{res2['ct']:.1f}s")
-    m6.metric("OEE", f"{res2['oee']:.1f}%")
-    m7.metric("WIP", f"{res2['wip']:.2f}")
-    m8.metric("Productivité", f"{res2['prod']:.1f} u/min")
 
-# TAB 3: ANALYSIS & SPC
 with tab3:
-    st.subheader("Analyse de l'Amélioration")
+    st.subheader("Analyse Approfondie : Cartes X̄ & R")
     
-    # Delta Charts
-    gv1, gv2, gv3, gv4 = st.columns(4)
-    def create_bar(label, r1_val, r2_val, color):
-        f = px.bar(x=["R1", "R2"], y=[r1_val, r2_val], color=["R1", "R2"], 
-                     color_discrete_map={"R1":"#86868b","R2":color}, height=300)
-        f.update_layout(title=label, showlegend=False, plot_bgcolor="rgba(0,0,0,0)")
-        return f
-
-    gv1.plotly_chart(create_bar("OEE (%)", res1['oee'], res2['oee'], "#0071e3"), use_container_width=True)
-    gv2.plotly_chart(create_bar("Lead Time (s)", res1['lt'], res2['lt'], "#5e5ce6"), use_container_width=True)
-    gv3.plotly_chart(create_bar("WIP Reduction", res1['wip'], res2['wip'], "#bf5af2"), use_container_width=True)
-    gv4.plotly_chart(create_bar("Productivité", res1['prod'], res2['prod'], "#32d74b"), use_container_width=True)
-
-    st.divider()
-    st.subheader("Cartes de Contrôle X̄ & R (Stabilité R2)")
-
-    # SPC Logic
+    # GÉNÉRATION DES DONNÉES SPC (Simulation Round 2)
     n_groups = 20
-    x_vals = [random.gauss(res2['ct'], res2['ct']*0.04) for _ in range(n_groups)]
-    r_vals = [abs(random.gauss(res2['ct']*0.08, res2['ct']*0.02)) for _ in range(n_groups)]
+    x_vals = [random.gauss(res2['ct'], res2['ct']*0.05) for _ in range(n_groups)]
+    # Simulation forcée de points hors limites pour l'interprétation
+    x_vals[4] = res2['ct'] * 1.3  # Point haut
+    x_vals[15] = res2['ct'] * 0.7 # Point bas
+    
+    r_vals = [abs(random.gauss(res2['ct']*0.1, res2['ct']*0.03)) for _ in range(n_groups)]
     
     avg_x, avg_r = np.mean(x_vals), np.mean(r_vals)
     UCLx, LCLx = avg_x + (0.577 * avg_r), avg_x - (0.577 * avg_r)
     UCLr, LCLr = 2.114 * avg_r, 0
 
-    # Interpretation Status
-    if all(LCLx < x < UCLx for x in x_vals):
-        st.success("✅ **INTERPRÉTATION :** Processus sous contrôle statistique")
-    else:
-        st.error("⚠️ **INTERPRÉTATION :** Processus hors contrôle")
+    # CALCUL DES POINTS HORS LIMITES
+    high_x = [i+1 for i, v in enumerate(x_vals) if v > UCLx]
+    low_x = [i+1 for i, v in enumerate(x_vals) if v < LCLx]
+    out_r = [i+1 for i, v in enumerate(r_vals) if v > UCLr]
 
+    # SECTION INTERPRÉTATION (Conforme au Cahier des Charges)
+    if not high_x and not low_x:
+        st.success("✅ **INTERPRÉTATION : Processus sous contrôle statistique**")
+    else:
+        st.error("⚠️ **INTERPRÉTATION : Processus hors contrôle**")
+        
+        col_exp, col_ing = st.columns(2)
+        with col_exp:
+            st.markdown(f"""
+            **A. Explication du résultat :**
+            - **Points hors limites :** {len(high_x) + len(low_x)} point(s) détecté(s).
+            - **Détails :** {len(high_x)} au-dessus de l'UCL, {len(low_x)} en-dessous de l'LCL.
+            - **Localisation :** Groupes {', '.join(map(str, high_x + low_x))}.
+            """)
+        with col_ing:
+            st.markdown(f"""
+            **B. Interprétation Ingénieur :**
+            - **Instabilité :** Variabilité élevée détectée.
+            - **Causes :** Présence probable de **causes spéciales** (matériel, main d'œuvre).
+            - **Statut :** Processus non maîtrisé nécessitant des actions correctives.
+            """)
+
+    # GRAPHIQUES
     cc1, cc2 = st.columns(2)
     with cc1:
         fig_x = go.Figure()
-        fig_x.add_trace(go.Scatter(y=x_vals, mode='lines+markers', name='Moyennes', line_color='#0071e3'))
-        fig_x.add_hline(y=avg_x, line_color="green", annotation_text="X̄")
-        fig_x.add_hline(y=UCLx, line_color="red", line_dash="dash", annotation_text="UCL")
-        fig_x.add_hline(y=LCLx, line_color="red", line_dash="dash", annotation_text="LCL")
-        st.plotly_chart(style_control_chart(fig_x, "Carte des Moyennes (X̄)", "Secondes (moy)"), use_container_width=True)
+        fig_x.add_trace(go.Scatter(y=x_vals, mode='lines+markers', name='X̄', line_color='#0071e3'))
+        fig_x.add_hline(y=avg_x, line_color="green", annotation_text="Moyenne")
+        fig_x.add_hline(y=UCLx, line_color="red", line_dash="dash", label="UCL")
+        fig_x.add_hline(y=LCLx, line_color="red", line_dash="dash", label="LCL")
+        st.plotly_chart(style_control_chart(fig_x, "Carte X̄ (Stabilité de la Moyenne)", "Secondes"), use_container_width=True)
 
     with cc2:
         fig_r = go.Figure()
-        fig_r.add_trace(go.Scatter(y=r_vals, mode='lines+markers', name='Étendues', line_color='#bf5af2'))
+        fig_r.add_trace(go.Scatter(y=r_vals, mode='lines+markers', name='R', line_color='#bf5af2'))
         fig_r.add_hline(y=avg_r, line_color="green", annotation_text="R̄")
-        fig_r.add_hline(y=UCLr, line_color="red", line_dash="dash", annotation_text="UCL")
-        fig_r.add_hline(y=LCLr, line_color="red", line_dash="dash", annotation_text="LCL")
-        st.plotly_chart(style_control_chart(fig_r, "Carte des Étendues (R)", "Variation (s)"), use_container_width=True)
+        fig_r.add_hline(y=UCLr, line_color="red", line_dash="dash", label="UCL")
+        st.plotly_chart(style_control_chart(fig_r, "Carte R (Maîtrise de la Variabilité)", "Dispersion"), use_container_width=True)
 
-    # Detailed Summary Table
-    st.markdown("### Synthèse Complète")
-    met_labels = ["OEE (%)", "Lead Time (s)", "WIP", "Taux VA (%)", "FPY (%)", "Productivité"]
-    r1_list = [res1['oee'], res1['lt'], res1['wip'], res1['tva'], res1['fpy'], res1['prod']]
-    r2_list = [res2['oee'], res2['lt'], res2['wip'], res2['tva'], res2['fpy'], res2['prod']]
-    
-    df_final = pd.DataFrame({
-        "Métrique": met_labels,
-        "Avant (R1)": [f"{v:.2f}" for v in r1_list],
-        "Après (R2)": [f"{v:.2f}" for v in r2_list],
-        "Impact (%)": [f"{((r2_list[i]-r1_list[i])/r1_list[i]*100):+.1f}%" if r1_list[i] != 0 else "0%" for i in range(len(met_labels))]
+    # ANALYSE CARTE R & CONCLUSION
+    st.divider()
+    c_bot1, c_bot2 = st.columns(2)
+    with c_bot1:
+        st.markdown(f"""
+        **C. Analyse de la Carte R :**
+        {'✅ Variabilité stable (aucun point hors UCL).' if not out_r else '❌ Variabilité instable sur certains groupes.'}
+        La dispersion intra-groupe est un indicateur clé de la répétabilité du processus.
+        """)
+        st.markdown("""
+        **D. Lien Lean Six Sigma & DMAIC :**
+        Dans la phase **Control**, nous cherchons à pérenniser les gains du Round 2. 
+        L'objectif est d'éliminer les causes spéciales pour atteindre la stabilité.
+        """)
+    with c_bot2:
+        st.markdown(f"""
+        **E. Comparaison & Conclusion :**
+        - **Évolution :** L'OEE est passé de {res1['oee']:.1f}% à {res2['oee']:.1f}%.
+        - **Bilan :** Gain de performance majeur, mais la stabilité statistique doit encore être sécurisée.
+        - **Action :** Identifier l'origine des écarts sur les groupes {', '.join(map(str, high_x + low_x))}.
+        """)
+
+    # TABLEAU RÉCAPITULATIF FINAL
+    st.markdown("### Synthèse des Gains (Avant vs Après)")
+    metrics = ["OEE (%)", "Lead Time (s)", "WIP", "Productivité"]
+    df = pd.DataFrame({
+        "Métrique": metrics,
+        "R1 (Initial)": [res1['oee'], res1['lt'], res1['wip'], res1['prod']],
+        "R2 (Optimisé)": [res2['oee'], res2['lt'], res2['wip'], res2['prod']]
     })
-    st.dataframe(df_final, use_container_width=True, hide_index=True)
+    st.table(df)
