@@ -209,16 +209,17 @@ with tab3:
 
     chart_col1, chart_col2, chart_col3 = st.columns(3)
 
-    def style_apple_chart(fig):
+    def style_control_chart(fig, title_text, y_label):
         fig.update_layout(
+            title=title_text,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font_family="-apple-system, BlinkMacSystemFont",
             showlegend=False,
-            margin=dict(l=20, r=20, t=40, b=20)
+            margin=dict(l=50, r=40, t=50, b=50) # Added margin for labels
         )
-        fig.update_xaxes(showgrid=False)
-        fig.update_yaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
+        fig.update_xaxes(title_text="Sous-groupes (n=5)", showgrid=False)
+        fig.update_yaxes(title_text=y_label, showgrid=True, gridcolor='rgba(128,128,128,0.2)')
         return fig
 
     with chart_col1:
@@ -226,14 +227,14 @@ with tab3:
                         x="Round", y="Value", color="Round", text_auto='.1f',
                         title="Cycle Time", 
                         color_discrete_map={"Round 1": "#86868b", "Round 2": "#0071e3"})
-        st.plotly_chart(style_apple_chart(fig_ct), use_container_width=True)
+        st.plotly_chart(style_control_chart(fig_x, "Carte des Moyennes (X̄)", "Secondes (moy)"), use_container_width=True)
 
     with chart_col2:
         fig_dr = px.bar(df_chart[df_chart["KPI"] == "Defect Rate"], 
                         x="Round", y="Value", color="Round", text_auto='.1f',
                         title="Defect Rate",
                         color_discrete_map={"Round 1": "#86868b", "Round 2": "#ff3b30"}) 
-        st.plotly_chart(style_apple_chart(fig_dr), use_container_width=True)
+        st.plotly_chart(style_control_chart(fig_r, "Carte des Étendues (R)", "Variation (sec)"), use_container_width=True)
 
     with chart_col3:
         fig_dt = px.bar(df_chart[df_chart["KPI"] == "Temps mort"], 
