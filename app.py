@@ -113,7 +113,7 @@ def calculate_all_metrics(production, total_time, defects, downtime):
         "wip": wip, "prod": productivity, "oee": oee * 100
     }
 
-# --- 5. TABS SETUP ---
+# --- 5. TABS SETUP (Updated with 4th Tab) ---
 tab1, tab2, tab3, tab4 = st.tabs(["Round 1", "Round 2", "Combined Analysis", "X & R Control"])
 
 # ==========================================
@@ -171,7 +171,7 @@ with tab2:
     n6.metric("Productivité", f"{res2['prod']:.1f} u/min")
 
 # ==========================================
-# TAB 3: COMBINED & VISUALS
+# TAB 3: COMBINED & VISUALS (Random SPC Removed)
 # ==========================================
 with tab3:
     st.subheader("Comparison Analysis")
@@ -215,52 +215,51 @@ with tab3:
         st.plotly_chart(style_fig(f3, "Productivity"), use_container_width=True)
 
 # ==========================================
-# TAB 4: X & R CONTROL (Automated LSS Calculator)
+# TAB 4: X & R CONTROL (Real User Input)
 # ==========================================
 with tab4:
-    st.subheader("📊 X̄ & R Control Charts (Automated)")
+    st.subheader("📊 X̄ & R Control Charts (Cycle Time per Operator)")
     st.markdown("""
-    - Enter raw processing times for 3 samples.
-    - Cycle Time is computed automatically using internal coefficients.
-    - Control limits are generated instantly.
+    - Each post represents one operator station
+    - Cycle time is entered manually per post (5 samples)
+    - Control charts are computed automatically
     """)
     
-    st.markdown("<br>### 1. Input Raw Data (Processing Time)", unsafe_allow_html=True)
+    st.markdown("<br>### Input Operator Data", unsafe_allow_html=True)
     
-    col_s1, col_s2, col_s3 = st.columns(3)
-    with col_s1:
-        s1 = st.number_input("Sample 1", value=10.0, step=0.5, key="s1")
-    with col_s2:
-        s2 = st.number_input("Sample 2", value=10.5, step=0.5, key="s2")
-    with col_s3:
-        s3 = st.number_input("Sample 3", value=9.5, step=0.5, key="s3")
-
-    # --- AUTOMATED CYCLE TIME CALCULATION ---
-    # Formula: Cycle Time = Processing Time + Temps Mort
-    temps_mort = 2.0  # Fixed internal coefficient
-    ct1 = s1 + temps_mort
-    ct2 = s2 + temps_mort
-    ct3 = s3 + temps_mort
+    # Headers for grid
+    h_cols = st.columns(6)
+    h_cols[0].markdown("**Station**")
+    for j in range(1, 6):
+        h_cols[j].markdown(f"**Sample {j}**")
+        
+    # Input matrix configuration
+    user_data = []
+    for i in range(1, 7):
+        cols = st.columns(6)
+        cols[0].markdown(f"<div style='margin-top: 8px; font-weight: 600; color: #0071e3;'>Post {i}</div>", unsafe_allow_html=True)
+        post_values = []
+        for j in range(1, 6):
+            val = cols[j].number_input(f"P{i}S{j}", value=10.0, step=0.1, key=f"post{i}_s{j}", label_visibility="collapsed")
+            post_values.append(val)
+        user_data.append(post_values)
+        
+    # Data transformation
+    data_array = np.array(user_data)
     
-    st.markdown(f"**Computed Cycle Times:** `S1 = {ct1:.1f}s` | `S2 = {ct2:.1f}s` | `S3 = {ct3:.1f}s`")
-
-    # --- DATA STRUCTURE ---
-    # 3 samples, treated as subgroups of size 1
-    data_array = np.array([[ct1], [ct2], [ct3]])
-    
-    # --- CALCULATIONS ---
+    # Mathematical calculation exactly as requested
     means = data_array.mean(axis=1)
     ranges = data_array.max(axis=1) - data_array.min(axis=1)
     
     X_bar_bar = np.mean(means)
     R_bar = np.mean(ranges)
     
-    # Constants for n=3 
-    A2 = 1.023
+    # Constants for n=5
+    A2 = 0.577
     D3 = 0
-    D4 = 2.574
+    D4 = 2.114
     
-    # Control Limits
+    # Limits calculations
     UCL_x = X_bar_bar + (A2 * R_bar)
     LCL_x = X_bar_bar - (A2 * R_bar)
     
@@ -268,9 +267,9 @@ with tab4:
     LCL_r = D3 * R_bar
     
     st.divider()
-    st.markdown("### 2. Process Stability Visualizations")
+    st.markdown("### Process Stability Visualizations")
     
-    sample_labels = ["Sample 1", "Sample 2", "Sample 3"]
+    post_labels = [f"Post {i}" for i in range(1, 7)]
 
     def style_control_fig(fig, title):
         fig.update_layout(title=title, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
@@ -280,21 +279,16 @@ with tab4:
     
     # X-BAR CHART PLOTTING
     with c_chart1:
-        fig_x_ctrl = go.Figure(go.Scatter(x=sample_labels, y=means, mode='lines+markers', line_color='#0071e3'))
+        fig_x_ctrl = go.Figure(go.Scatter(x=post_labels, y=means, mode='lines+markers', line_color='#0071e3'))
         fig_x_ctrl.add_hline(y=X_bar_bar, line_color="#34c759", annotation_text=f"Mean (X̄̄): {X_bar_bar:.2f}")
         fig_x_ctrl.add_hline(y=UCL_x, line_color="#ff3b30", line_dash="dash", annotation_text=f"UCL: {UCL_x:.2f}")
         fig_x_ctrl.add_hline(y=LCL_x, line_color="#ff3b30", line_dash="dash", annotation_text=f"LCL: {LCL_x:.2f}")
-        st.plotly_chart(style_control_fig(fig_x_ctrl, "Carte X-Bar (Sample Means)"), use_container_width=True)
+        st.plotly_chart(style_control_fig(fig_x_ctrl, "Carte X-Bar (Means per Post)"), use_container_width=True)
         
     # R CHART PLOTTING
     with c_chart2:
-        fig_r_ctrl = go.Figure(go.Scatter(x=sample_labels, y=ranges, mode='lines+markers', line_color='#bf5af2'))
+        fig_r_ctrl = go.Figure(go.Scatter(x=post_labels, y=ranges, mode='lines+markers', line_color='#bf5af2'))
         fig_r_ctrl.add_hline(y=R_bar, line_color="#34c759", annotation_text=f"R-bar: {R_bar:.2f}")
         fig_r_ctrl.add_hline(y=UCL_r, line_color="#ff3b30", line_dash="dash", annotation_text=f"UCL: {UCL_r:.2f}")
         fig_r_ctrl.add_hline(y=LCL_r, line_color="#ff3b30", line_dash="dash", annotation_text=f"LCL: {LCL_r:.2f}")
-        st.plotly_chart(style_control_fig(fig_r_ctrl, "Carte R (Sample Ranges)"), use_container_width=True)
-
-    st.divider()
-    
-    # --- SUCCESS MESSAGE ---
-    st.success("🟡 🎉 **Congratulations! You achieved Yellow Belt level performance in Lean Six Sigma.**")
+        st.plotly_chart(style_control_fig(fig_r_ctrl, "Carte R (Ranges per Post)"), use_container_width=True)
