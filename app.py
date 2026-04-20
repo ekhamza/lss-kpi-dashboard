@@ -215,7 +215,7 @@ with tab3:
         f3 = px.bar(x=["R1", "R2"], y=[res1['prod'], res2['prod']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#bf5af2"})
         st.plotly_chart(style_fig(f3, "Productivity"), use_container_width=True)
 
-  # --- CONTROL CHARTS (X-BAR & R) ---
+ # --- CONTROL CHARTS (X-BAR & R) ---
 st.markdown("<br><hr>", unsafe_allow_html=True)
 st.subheader("Cartes de Contrôle (Stabilité du Processus)")
 
