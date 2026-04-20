@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import random
-import numpy as np
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="LSS Dashboard Pro", page_icon="📈", layout="wide")
@@ -69,6 +68,7 @@ st.markdown("""
 # --- 3. HEADER SECTION ---
 col_title, col_logo = st.columns([3, 1])
 with col_title:
+    # Integration of classmate's title concept with your styling
     st.title("Simulation Lean Six Sigma")
     st.markdown("<p style='color: #86868b; font-size: 1.2rem; margin-top: -5px;'>Approche DMAIC : Experience the power of efficiency.</p>", unsafe_allow_html=True)
 with col_logo:
@@ -79,6 +79,7 @@ with col_logo:
         </div>
     """, unsafe_allow_html=True)
 
+# --- CLASSMATE'S VISUALS & CONTEXT INTEGRATION ---
 st.markdown("""
 Cette application simule une ligne de production avec et sans Lean Six Sigma  
 afin d’analyser l’impact sur la performance industrielle.
@@ -92,27 +93,33 @@ obj_col3.info("📈 Améliorer la productivité")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# --- 4. CALCULATION ENGINE ---
+# --- 4. CALCULATION ENGINE (Old + New Combined) ---
 def calculate_all_metrics(production, total_time, defects, downtime):
+    # --- ORIGINAL METRICS ---
     cycle_time = total_time / production if production > 0 else 0
     defect_rate = (defects / production) * 100 if production > 0 else 0
     downtime_rate = (downtime / total_time) * 100 if total_time > 0 else 0
     
+    # --- NEW ADDED METRICS ---
+    lead_time_kpi = total_time / production if production > 0 else 0
     fpy = (production - defects) / production if production > 0 else 0
     va_rate = (total_time - downtime) / total_time if total_time > 0 else 0
     wip = (production * cycle_time) / total_time if total_time > 0 else 0
     productivity = production / (total_time / 60) if total_time > 0 else 0
-    oee = va_rate * 1.0 * fpy 
+    oee = va_rate * 1.0 * fpy # OEE = Disponibilité * Performance (1) * Qualité
     
     return {
         "ct": cycle_time, "dr": defect_rate, "dt": downtime_rate,
-        "fpy": fpy * 100, "va": va_rate * 100,
+        "lt": lead_time_kpi, "fpy": fpy * 100, "va": va_rate * 100,
         "wip": wip, "prod": productivity, "oee": oee * 100
     }
 
 # --- 5. TABS SETUP ---
 tab1, tab2, tab3 = st.tabs(["Round 1", "Round 2", "Combined Analysis"])
 
+# ==========================================
+# TAB 1: ROUND 1
+# ==========================================
 with tab1:
     st.subheader("Initial Data Collection")
     col1, col2 = st.columns(2)
@@ -122,14 +129,24 @@ with tab1:
     with col2:
         defects1 = st.number_input("Defects - R1", value=8, min_value=0, step=1)
         downtime1 = st.number_input("Temps mort (sec) - R1", value=60, min_value=0, step=5)
+
     res1 = calculate_all_metrics(prod1, time1, defects1, downtime1)
     
-    st.markdown("### Measured Performance")
+    st.markdown("### Measured Performance (Original)")
     k1, k2, k3 = st.columns(3)
     k1.metric("⏱️ Cycle Time", f"{res1['ct']:.1f}s")
     k2.metric("⚠️ Defect Rate", f"{res1['dr']:.1f}%")
     k3.metric("🛑 Temps mort", f"{res1['dt']:.1f}%")
 
+    st.markdown("### Industrial Indicators (Added)")
+    n1, n2, n3 = st.columns(3)
+    n1.metric("OEE", f"{res1['oee']:.1f}%")
+    n2.metric("First Pass Yield", f"{res1['fpy']:.1f}%")
+    n3.metric("Productivité", f"{res1['prod']:.1f} u/min")
+
+# ==========================================
+# TAB 2: ROUND 2
+# ==========================================
 with tab2:
     st.subheader("Post-Optimization Data")
     col3, col4 = st.columns(2)
@@ -139,16 +156,27 @@ with tab2:
     with col4:
         defects2 = st.number_input("Defects - R2", value=2, min_value=0, step=1)
         downtime2 = st.number_input("Temps mort (sec) - R2", value=30, min_value=0, step=5)
+
     res2 = calculate_all_metrics(prod2, time2, defects2, downtime2)
     
-    st.markdown("### Measured Performance")
+    st.markdown("### Measured Performance (Original)")
     k4, k5, k6 = st.columns(3)
     k4.metric("⏱️ Cycle Time", f"{res2['ct']:.1f}s")
     k5.metric("⚠️ Defect Rate", f"{res2['dr']:.1f}%")
     k6.metric("🛑 Temps mort", f"{res2['dt']:.1f}%")
 
+    st.markdown("### Industrial Indicators (Added)")
+    n4, n5, n6 = st.columns(3)
+    n4.metric("OEE", f"{res2['oee']:.1f}%")
+    n5.metric("First Pass Yield", f"{res2['fpy']:.1f}%")
+    n6.metric("Productivité", f"{res2['prod']:.1f} u/min")
+
+# ==========================================
+# TAB 3: COMBINED & VISUALS
+# ==========================================
 with tab3:
     st.subheader("Comparison Analysis")
+    
     c_col1, c_col2, c_col3 = st.columns(3)
     c_col1.metric("Cycle Time", f"{res2['ct']:.1f}s", delta=f"{res2['ct']-res1['ct']:.1f}s", delta_color="inverse")
     c_col2.metric("OEE", f"{res2['oee']:.1f}%", delta=f"{res2['oee']-res1['oee']:.1f}%")
@@ -156,43 +184,51 @@ with tab3:
 
     st.divider()
 
-    # --- CONTROL CHARTS (X-BAR & R) IMPROVED ---
-    st.subheader("Cartes de Contrôle (MSP / SPC)")
+    # --- FULL TABLE ---
+    kpi_list = ["Cycle Time", "Defect Rate", "OEE", "FPY", "VA Rate", "Productivity"]
+    r1_list = [res1['ct'], res1['dr'], res1['oee'], res1['fpy'], res1['va'], res1['prod']]
+    r2_list = [res2['ct'], res2['dr'], res2['oee'], res2['fpy'], res2['va'], res2['prod']]
+    
+    df_table = pd.DataFrame({
+        "Metric": kpi_list,
+        "Before (R1)": [f"{v:.1f}" for v in r1_list],
+        "After (R2)": [f"{v:.1f}" for v in r2_list],
+        "Impact": [f"{((r2_list[i]-r1_list[i])/r1_list[i]*100):+.1f}%" if r1_list[i] != 0 else "0%" for i in range(len(kpi_list))]
+    })
+    st.dataframe(df_table, use_container_width=True, hide_index=True)
+
+    # --- ORIGINAL CHARTS + NEW CHARTS ---
+    st.markdown("### Performance Visualizations")
+    v_col1, v_col2, v_col3 = st.columns(3)
+
+    def style_fig(fig, title):
+        fig.update_layout(title=title, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
+        return fig
+
+    with v_col1:
+        f1 = px.bar(x=["R1", "R2"], y=[res1['ct'], res2['ct']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#0071e3"})
+        st.plotly_chart(style_fig(f1, "Cycle Time Evolution"), use_container_width=True)
+    with v_col2:
+        f2 = px.bar(x=["R1", "R2"], y=[res1['oee'], res2['oee']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#34c759"})
+        st.plotly_chart(style_fig(f2, "OEE %"), use_container_width=True)
+    with v_col3:
+        f3 = px.bar(x=["R1", "R2"], y=[res1['prod'], res2['prod']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#bf5af2"})
+        st.plotly_chart(style_fig(f3, "Productivity"), use_container_width=True)
+
+    # --- CONTROL CHARTS (X-BAR & R) ---
+    st.markdown("<br><hr>", unsafe_allow_html=True)
+    st.subheader("Cartes de Contrôle (Stabilité du Processus)")
     
     n_groups = 20
     x_vals = [random.gauss(res2['ct'], res2['ct']*0.05) for _ in range(n_groups)]
     r_vals = [random.uniform(0, res2['ct']*0.1) for _ in range(n_groups)]
     
-    # CALCUL DES LIMITES X-BAR (3 Sigma)
-    x_mean = np.mean(x_vals)
-    x_std = np.std(x_vals)
-    ucl_x = x_mean + (3 * x_std)
-    lcl_x = x_mean - (3 * x_std)
-
-    # CALCUL DES LIMITES R (Range)
-    r_mean = np.mean(r_vals)
-    ucl_r = r_mean * 2.114 # Constante D4 pour n=5 (estimation visuelle)
-    lcl_r = r_mean * 0     # Constante D3 pour n=5
-
-    def style_fig(fig, title):
-        fig.update_layout(title=title, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=True)
-        return fig
-
     cc1, cc2 = st.columns(2)
     with cc1:
-        fig_x = go.Figure()
-        fig_x.add_trace(go.Scatter(y=x_vals, mode='lines+markers', name='Cycle Time', line_color='#0071e3'))
-        # Ajout des lignes de contrôle
-        fig_x.add_hline(y=x_mean, line_color="#34c759", annotation_text="Moyenne")
-        fig_x.add_hline(y=ucl_x, line_color="#ff3b30", line_dash="dash", annotation_text="UCL (LSS)")
-        fig_x.add_hline(y=lcl_x, line_color="#ff3b30", line_dash="dash", annotation_text="LCL (LSI)")
-        st.plotly_chart(style_fig(fig_x, "Carte X-Bar (Stabilité)"), use_container_width=True)
-
+        fig_x = go.Figure(go.Scatter(y=x_vals, mode='lines+markers', line_color='#0071e3'))
+        fig_x.add_hline(y=sum(x_vals)/n_groups, line_color="#34c759")
+        st.plotly_chart(style_fig(fig_x, "Carte X-Bar (Cycle Time)"), use_container_width=True)
     with cc2:
-        fig_r = go.Figure()
-        fig_r.add_trace(go.Scatter(y=r_vals, mode='lines+markers', name='Étendue', line_color='#bf5af2'))
-        # Ajout des lignes de contrôle
-        fig_r.add_hline(y=r_mean, line_color="#34c759", annotation_text="R-bar")
-        fig_r.add_hline(y=ucl_r, line_color="#ff3b30", line_dash="dash", annotation_text="UCL")
-        fig_r.add_hline(y=lcl_r, line_color="#ff3b30", line_dash="dash", annotation_text="LCL")
-        st.plotly_chart(style_fig(fig_r, "Carte R (Variabilité)"), use_container_width=True)
+        fig_r = go.Figure(go.Scatter(y=r_vals, mode='lines+markers', line_color='#bf5af2'))
+        fig_r.add_hline(y=sum(r_vals)/n_groups, line_color="#34c759")
+        st.plotly_chart(style_fig(fig_r, "Carte R (Étendue)"), use_container_width=True)
