@@ -224,9 +224,9 @@ with tab4:
 
     colA, colB = st.columns(2)
     with colA:
-        n_groups = st.number_input("Number of Subgroups", min_value=2, max_value=10, value=3)
+        n_groups = st.number_input("Number of Posts", min_value=2, max_value=10, value=3)
     with colB:
-        n_obs = st.number_input("Observations per Subgroup", min_value=2, max_value=10, value=5)
+        n_obs = st.number_input("Cycle Time Measurements", min_value=2, max_value=10, value=5)
 
     st.markdown("### Enter Cycle Time Data")
 
@@ -236,7 +236,7 @@ with tab4:
         row = []
         for j in range(n_obs):
             val = cols[j].number_input(
-                f"G{i+1} - V{j+1}",
+                f"Post {i+1} - Cycle {j+1}",
                 value=10.0,
                 key=f"{i}-{j}"
             )
