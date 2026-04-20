@@ -68,8 +68,9 @@ st.markdown("""
 # --- 3. HEADER SECTION ---
 col_title, col_logo = st.columns([3, 1])
 with col_title:
-    st.title("Lean Six Sigma")
-    st.markdown("<p style='color: #86868b; font-size: 1.2rem; margin-top: -5px;'>Experience the power of efficiency.</p>", unsafe_allow_html=True)
+    # Integration of classmate's title concept with your styling
+    st.title("Simulation Lean Six Sigma")
+    st.markdown("<p style='color: #86868b; font-size: 1.2rem; margin-top: -5px;'>Approche DMAIC : Experience the power of efficiency.</p>", unsafe_allow_html=True)
 with col_logo:
     st.markdown("""
         <div class="logo-container">
@@ -77,6 +78,18 @@ with col_logo:
             <div class="lss-logo">Σ</div>
         </div>
     """, unsafe_allow_html=True)
+
+# --- CLASSMATE'S VISUALS & CONTEXT INTEGRATION ---
+st.markdown("""
+Cette application simule une ligne de production avec et sans Lean Six Sigma  
+afin d’analyser l’impact sur la performance industrielle.
+""")
+
+st.subheader("🎯 Objectifs")
+obj_col1, obj_col2, obj_col3 = st.columns(3)
+obj_col1.success("⏱ Réduire le temps")
+obj_col2.error("❌ Réduire les défauts")
+obj_col3.info("📈 Améliorer la productivité")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
