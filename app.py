@@ -252,4 +252,43 @@ with tab4:
     ranges = data_array.max(axis=1) - data_array.min(axis=1)
     
     X_bar_bar = np.mean(means)
-    R_bar = np
+    R_bar = np.mean(ranges)
+    
+    # Constants for n=5
+    A2 = 0.577
+    D3 = 0
+    D4 = 2.114
+    
+    # Limits calculations
+    UCL_x = X_bar_bar + (A2 * R_bar)
+    LCL_x = X_bar_bar - (A2 * R_bar)
+    
+    UCL_r = D4 * R_bar
+    LCL_r = D3 * R_bar
+    
+    st.divider()
+    st.markdown("### Process Stability Visualizations")
+    
+    post_labels = [f"Post {i}" for i in range(1, 7)]
+
+    def style_control_fig(fig, title):
+        fig.update_layout(title=title, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
+        return fig
+
+    c_chart1, c_chart2 = st.columns(2)
+    
+    # X-BAR CHART PLOTTING
+    with c_chart1:
+        fig_x_ctrl = go.Figure(go.Scatter(x=post_labels, y=means, mode='lines+markers', line_color='#0071e3'))
+        fig_x_ctrl.add_hline(y=X_bar_bar, line_color="#34c759", annotation_text=f"Mean (X̄̄): {X_bar_bar:.2f}")
+        fig_x_ctrl.add_hline(y=UCL_x, line_color="#ff3b30", line_dash="dash", annotation_text=f"UCL: {UCL_x:.2f}")
+        fig_x_ctrl.add_hline(y=LCL_x, line_color="#ff3b30", line_dash="dash", annotation_text=f"LCL: {LCL_x:.2f}")
+        st.plotly_chart(style_control_fig(fig_x_ctrl, "Carte X-Bar (Means per Post)"), use_container_width=True)
+        
+    # R CHART PLOTTING
+    with c_chart2:
+        fig_r_ctrl = go.Figure(go.Scatter(x=post_labels, y=ranges, mode='lines+markers', line_color='#bf5af2'))
+        fig_r_ctrl.add_hline(y=R_bar, line_color="#34c759", annotation_text=f"R-bar: {R_bar:.2f}")
+        fig_r_ctrl.add_hline(y=UCL_r, line_color="#ff3b30", line_dash="dash", annotation_text=f"UCL: {UCL_r:.2f}")
+        fig_r_ctrl.add_hline(y=LCL_r, line_color="#ff3b30", line_dash="dash", annotation_text=f"LCL: {LCL_r:.2f}")
+        st.plotly_chart(style_control_fig(fig_r_ctrl, "Carte R (Ranges per Post)"), use_container_width=True)
