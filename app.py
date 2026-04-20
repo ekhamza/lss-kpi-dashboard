@@ -195,57 +195,7 @@ with tab3:
         "After (R2)": [f"{v:.1f}" for v in r2_list],
         "Impact": [f"{((r2_list[i]-r1_list[i])/r1_list[i]*100):+.1f}%" if r1_list[i] != 0 else "0%" for i in range(len(kpi_list))]
 
-         # --- CONTROL CHARTS (X-BAR & R) ---
-st.markdown("<br><hr>", unsafe_allow_html=True)
-st.subheader("Cartes de Contrôle (Stabilité du Processus)")
-
-n_groups = 20
-x_vals = [random.gauss(res2['ct'], res2['ct']*0.05) for _ in range(n_groups)]
-r_vals = [random.uniform(0, res2['ct']*0.1) for _ in range(n_groups)]
-
-# --- CALCULATIONS ---
-x_mean = np.mean(x_vals)
-x_std = np.std(x_vals)
-
-ucl_x = x_mean + 3 * x_std
-lcl_x = x_mean - 3 * x_std
-
-r_mean = np.mean(r_vals)
-r_std = np.std(r_vals)
-
-ucl_r = r_mean + 3 * r_std
-lcl_r = max(r_mean - 3 * r_std, 0)
-
-cc1, cc2 = st.columns(2)
-
-# --- X BAR CHART ---
-with cc1:
-    fig_x = go.Figure(go.Scatter(y=x_vals, mode='lines+markers', line_color='#0071e3'))
-    
-    # Mean
-    fig_x.add_hline(y=x_mean, line_color="#34c759", annotation_text="Mean")
-    
-    # UCL / LCL
-    fig_x.add_hline(y=ucl_x, line_color="red", line_dash="dash", annotation_text="UCL")
-    fig_x.add_hline(y=lcl_x, line_color="red", line_dash="dash", annotation_text="LCL")
-    
-    st.plotly_chart(style_fig(fig_x, "Carte X-Bar (Cycle Time)"), use_container_width=True)
-
-# --- R CHART ---
-with cc2:
-    fig_r = go.Figure(go.Scatter(y=r_vals, mode='lines+markers', line_color='#bf5af2'))
-    
-    # Mean
-    fig_r.add_hline(y=r_mean, line_color="#34c759", annotation_text="Mean")
-    
-    # UCL / LCL
-    fig_r.add_hline(y=ucl_r, line_color="red", line_dash="dash", annotation_text="UCL")
-    fig_r.add_hline(y=lcl_r, line_color="red", line_dash="dash", annotation_text="LCL")
-    
-    st.plotly_chart(style_fig(fig_r, "Carte R (Étendue)"), use_container_width=True)
-
-
-    }})
+    })
     st.dataframe(df_table, use_container_width=True, hide_index=True)
 
     # --- ORIGINAL CHARTS + NEW CHARTS ---
