@@ -218,77 +218,80 @@ with tab3:
 # TAB 4: X & R CONTROL (Real User Input)
 # ==========================================
 with tab4:
-    st.subheader("📊 X̄ & R Control Charts (Cycle Time per Operator)")
-    st.markdown("""
-    - Each post represents one operator station
-    - Cycle time is entered manually per post (5 samples)
-    - Control charts are computed automatically
-    """)
-    
-    st.markdown("<br>### Input Operator Data", unsafe_allow_html=True)
-    
-    # Headers for grid
-    h_cols = st.columns(6)
-    h_cols[0].markdown("**Station**")
-    for j in range(1, 6):
-        h_cols[j].markdown(f"**Sample {j}**")
-        
-    # Input matrix configuration
-    user_data = []
-    for i in range(1, 7):
-        cols = st.columns(6)
-        cols[0].markdown(f"<div style='margin-top: 8px; font-weight: 600; color: #0071e3;'>Post {i}</div>", unsafe_allow_html=True)
-        post_values = []
-        for j in range(1, 6):
-            val = cols[j].number_input(f"P{i}S{j}", value=10.0, step=0.1, key=f"post{i}_s{j}", label_visibility="collapsed")
-            post_values.append(val)
-        user_data.append(post_values)
-        
-    # Data transformation
-    data_array = np.array(user_data)
-    
-    # Mathematical calculation exactly as requested
-    means = data_array.mean(axis=1)
-    ranges = data_array.max(axis=1) - data_array.min(axis=1)
-    
-    X_bar_bar = np.mean(means)
-    R_bar = np.mean(ranges)
-    
-    # Constants for n=5
-    A2 = 0.577
-    D3 = 0
-    D4 = 2.114
-    
-    # Limits calculations
-    UCL_x = X_bar_bar + (A2 * R_bar)
-    LCL_x = X_bar_bar - (A2 * R_bar)
-    
+    st.subheader("📊 X̄ & R Control Charts (Real Data Entry)")
+
+    st.markdown("### Configuration")
+
+    colA, colB = st.columns(2)
+    with colA:
+        n_groups = st.number_input("Number of Subgroups", min_value=2, max_value=10, value=3)
+    with colB:
+        n_obs = st.number_input("Observations per Subgroup", min_value=2, max_value=10, value=5)
+
+    st.markdown("### Enter Cycle Time Data")
+
+    data = []
+    for i in range(n_groups):
+        cols = st.columns(n_obs)
+        row = []
+        for j in range(n_obs):
+            val = cols[j].number_input(
+                f"G{i+1} - V{j+1}",
+                value=10.0,
+                key=f"{i}-{j}"
+            )
+            row.append(val)
+        data.append(row)
+
+    data = np.array(data)
+
+    # --- CALCULATIONS ---
+    means = data.mean(axis=1)
+    ranges = data.max(axis=1) - data.min(axis=1)
+
+    X_bar_bar = means.mean()
+    R_bar = ranges.mean()
+
+    # --- CONSTANTS (adapted for subgroup size) ---
+    constants = {
+        2: (1.88, 0, 3.267),
+        3: (1.023, 0, 2.574),
+        4: (0.729, 0, 2.282),
+        5: (0.577, 0, 2.114),
+        6: (0.483, 0, 2.004),
+        7: (0.419, 0.076, 1.924),
+        8: (0.373, 0.136, 1.864),
+        9: (0.337, 0.184, 1.816),
+        10: (0.308, 0.223, 1.777),
+    }
+
+    A2, D3, D4 = constants.get(n_obs, (0.577, 0, 2.114))
+
+    # --- LIMITS ---
+    UCL_x = X_bar_bar + A2 * R_bar
+    LCL_x = X_bar_bar - A2 * R_bar
+
     UCL_r = D4 * R_bar
     LCL_r = D3 * R_bar
-    
-    st.divider()
-    st.markdown("### Process Stability Visualizations")
-    
-    post_labels = [f"Post {i}" for i in range(1, 7)]
 
-    def style_control_fig(fig, title):
-        fig.update_layout(title=title, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
-        return fig
+    st.markdown("### 📈 X̄ Chart")
 
-    c_chart1, c_chart2 = st.columns(2)
-    
-    # X-BAR CHART PLOTTING
-    with c_chart1:
-        fig_x_ctrl = go.Figure(go.Scatter(x=post_labels, y=means, mode='lines+markers', line_color='#0071e3'))
-        fig_x_ctrl.add_hline(y=X_bar_bar, line_color="#34c759", annotation_text=f"Mean (X̄̄): {X_bar_bar:.2f}")
-        fig_x_ctrl.add_hline(y=UCL_x, line_color="#ff3b30", line_dash="dash", annotation_text=f"UCL: {UCL_x:.2f}")
-        fig_x_ctrl.add_hline(y=LCL_x, line_color="#ff3b30", line_dash="dash", annotation_text=f"LCL: {LCL_x:.2f}")
-        st.plotly_chart(style_control_fig(fig_x_ctrl, "Carte X-Bar (Means per Post)"), use_container_width=True)
-        
-    # R CHART PLOTTING
-    with c_chart2:
-        fig_r_ctrl = go.Figure(go.Scatter(x=post_labels, y=ranges, mode='lines+markers', line_color='#bf5af2'))
-        fig_r_ctrl.add_hline(y=R_bar, line_color="#34c759", annotation_text=f"R-bar: {R_bar:.2f}")
-        fig_r_ctrl.add_hline(y=UCL_r, line_color="#ff3b30", line_dash="dash", annotation_text=f"UCL: {UCL_r:.2f}")
-        fig_r_ctrl.add_hline(y=LCL_r, line_color="#ff3b30", line_dash="dash", annotation_text=f"LCL: {LCL_r:.2f}")
-        st.plotly_chart(style_control_fig(fig_r_ctrl, "Carte R (Ranges per Post)"), use_container_width=True)
+    fig_x = go.Figure()
+    fig_x.add_trace(go.Scatter(y=means, mode='lines+markers', name="Means"))
+
+    fig_x.add_hline(y=X_bar_bar, line_color="green", annotation_text="Mean")
+    fig_x.add_hline(y=UCL_x, line_color="red", line_dash="dash", annotation_text="UCL")
+    fig_x.add_hline(y=LCL_x, line_color="red", line_dash="dash", annotation_text="LCL")
+
+    st.plotly_chart(fig_x, use_container_width=True)
+
+    st.markdown("### 📊 R Chart")
+
+    fig_r = go.Figure()
+    fig_r.add_trace(go.Scatter(y=ranges, mode='lines+markers', name="Range"))
+
+    fig_r.add_hline(y=R_bar, line_color="green", annotation_text="Mean")
+    fig_r.add_hline(y=UCL_r, line_color="red", line_dash="dash", annotation_text="UCL")
+    fig_r.add_hline(y=LCL_r, line_color="red", line_dash="dash", annotation_text="LCL")
+
+    st.plotly_chart(fig_r, use_container_width=True)
