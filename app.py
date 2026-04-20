@@ -194,28 +194,8 @@ with tab3:
         "Before (R1)": [f"{v:.1f}" for v in r1_list],
         "After (R2)": [f"{v:.1f}" for v in r2_list],
         "Impact": [f"{((r2_list[i]-r1_list[i])/r1_list[i]*100):+.1f}%" if r1_list[i] != 0 else "0%" for i in range(len(kpi_list))]
-    })
-    st.dataframe(df_table, use_container_width=True, hide_index=True)
 
-    # --- ORIGINAL CHARTS + NEW CHARTS ---
-    st.markdown("### Performance Visualizations")
-    v_col1, v_col2, v_col3 = st.columns(3)
-
-    def style_fig(fig, title):
-        fig.update_layout(title=title, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
-        return fig
-
-    with v_col1:
-        f1 = px.bar(x=["R1", "R2"], y=[res1['ct'], res2['ct']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#0071e3"})
-        st.plotly_chart(style_fig(f1, "Cycle Time Evolution"), use_container_width=True)
-    with v_col2:
-        f2 = px.bar(x=["R1", "R2"], y=[res1['oee'], res2['oee']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#34c759"})
-        st.plotly_chart(style_fig(f2, "OEE %"), use_container_width=True)
-    with v_col3:
-        f3 = px.bar(x=["R1", "R2"], y=[res1['prod'], res2['prod']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#bf5af2"})
-        st.plotly_chart(style_fig(f3, "Productivity"), use_container_width=True)
-
- # --- CONTROL CHARTS (X-BAR & R) ---
+         # --- CONTROL CHARTS (X-BAR & R) ---
 st.markdown("<br><hr>", unsafe_allow_html=True)
 st.subheader("Cartes de Contrôle (Stabilité du Processus)")
 
@@ -263,5 +243,26 @@ with cc2:
     fig_r.add_hline(y=lcl_r, line_color="red", line_dash="dash", annotation_text="LCL")
     
     st.plotly_chart(style_fig(fig_r, "Carte R (Étendue)"), use_container_width=True)
-with tab3:
-    show_control_charts(res2, style_fig)
+
+
+    })
+    st.dataframe(df_table, use_container_width=True, hide_index=True)
+
+    # --- ORIGINAL CHARTS + NEW CHARTS ---
+    st.markdown("### Performance Visualizations")
+    v_col1, v_col2, v_col3 = st.columns(3)
+
+    def style_fig(fig, title):
+        fig.update_layout(title=title, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", showlegend=False)
+        return fig
+
+    with v_col1:
+        f1 = px.bar(x=["R1", "R2"], y=[res1['ct'], res2['ct']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#0071e3"})
+        st.plotly_chart(style_fig(f1, "Cycle Time Evolution"), use_container_width=True)
+    with v_col2:
+        f2 = px.bar(x=["R1", "R2"], y=[res1['oee'], res2['oee']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#34c759"})
+        st.plotly_chart(style_fig(f2, "OEE %"), use_container_width=True)
+    with v_col3:
+        f3 = px.bar(x=["R1", "R2"], y=[res1['prod'], res2['prod']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#bf5af2"})
+        st.plotly_chart(style_fig(f3, "Productivity"), use_container_width=True)
+
