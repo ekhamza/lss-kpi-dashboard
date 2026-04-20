@@ -245,7 +245,7 @@ with cc2:
     st.plotly_chart(style_fig(fig_r, "Carte R (Étendue)"), use_container_width=True)
 
 
-    })
+    }})
     st.dataframe(df_table, use_container_width=True, hide_index=True)
 
     # --- ORIGINAL CHARTS + NEW CHARTS ---
