@@ -264,4 +264,4 @@ with cc2:
     
     st.plotly_chart(style_fig(fig_r, "Carte R (Étendue)"), use_container_width=True)
 with tab3:
-    show_control_charts(...)
+    show_control_charts(res2, style_fig)
