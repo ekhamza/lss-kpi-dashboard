@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import random
-
+import numpy as np
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="LSS Dashboard Pro", page_icon="📈", layout="wide")
 
@@ -215,20 +215,51 @@ with tab3:
         f3 = px.bar(x=["R1", "R2"], y=[res1['prod'], res2['prod']], color=["R1", "R2"], color_discrete_map={"R1": "#86868b", "R2": "#bf5af2"})
         st.plotly_chart(style_fig(f3, "Productivity"), use_container_width=True)
 
-    # --- CONTROL CHARTS (X-BAR & R) ---
-    st.markdown("<br><hr>", unsafe_allow_html=True)
-    st.subheader("Cartes de Contrôle (Stabilité du Processus)")
+  # --- CONTROL CHARTS (X-BAR & R) ---
+st.markdown("<br><hr>", unsafe_allow_html=True)
+st.subheader("Cartes de Contrôle (Stabilité du Processus)")
+
+n_groups = 20
+x_vals = [random.gauss(res2['ct'], res2['ct']*0.05) for _ in range(n_groups)]
+r_vals = [random.uniform(0, res2['ct']*0.1) for _ in range(n_groups)]
+
+# --- CALCULATIONS ---
+x_mean = np.mean(x_vals)
+x_std = np.std(x_vals)
+
+ucl_x = x_mean + 3 * x_std
+lcl_x = x_mean - 3 * x_std
+
+r_mean = np.mean(r_vals)
+r_std = np.std(r_vals)
+
+ucl_r = r_mean + 3 * r_std
+lcl_r = max(r_mean - 3 * r_std, 0)
+
+cc1, cc2 = st.columns(2)
+
+# --- X BAR CHART ---
+with cc1:
+    fig_x = go.Figure(go.Scatter(y=x_vals, mode='lines+markers', line_color='#0071e3'))
     
-    n_groups = 20
-    x_vals = [random.gauss(res2['ct'], res2['ct']*0.05) for _ in range(n_groups)]
-    r_vals = [random.uniform(0, res2['ct']*0.1) for _ in range(n_groups)]
+    # Mean
+    fig_x.add_hline(y=x_mean, line_color="#34c759", annotation_text="Mean")
     
-    cc1, cc2 = st.columns(2)
-    with cc1:
-        fig_x = go.Figure(go.Scatter(y=x_vals, mode='lines+markers', line_color='#0071e3'))
-        fig_x.add_hline(y=sum(x_vals)/n_groups, line_color="#34c759")
-        st.plotly_chart(style_fig(fig_x, "Carte X-Bar (Cycle Time)"), use_container_width=True)
-    with cc2:
-        fig_r = go.Figure(go.Scatter(y=r_vals, mode='lines+markers', line_color='#bf5af2'))
-        fig_r.add_hline(y=sum(r_vals)/n_groups, line_color="#34c759")
-        st.plotly_chart(style_fig(fig_r, "Carte R (Étendue)"), use_container_width=True)
+    # UCL / LCL
+    fig_x.add_hline(y=ucl_x, line_color="red", line_dash="dash", annotation_text="UCL")
+    fig_x.add_hline(y=lcl_x, line_color="red", line_dash="dash", annotation_text="LCL")
+    
+    st.plotly_chart(style_fig(fig_x, "Carte X-Bar (Cycle Time)"), use_container_width=True)
+
+# --- R CHART ---
+with cc2:
+    fig_r = go.Figure(go.Scatter(y=r_vals, mode='lines+markers', line_color='#bf5af2'))
+    
+    # Mean
+    fig_r.add_hline(y=r_mean, line_color="#34c759", annotation_text="Mean")
+    
+    # UCL / LCL
+    fig_r.add_hline(y=ucl_r, line_color="red", line_dash="dash", annotation_text="UCL")
+    fig_r.add_hline(y=lcl_r, line_color="red", line_dash="dash", annotation_text="LCL")
+    
+    st.plotly_chart(style_fig(fig_r, "Carte R (Étendue)"), use_container_width=True)
