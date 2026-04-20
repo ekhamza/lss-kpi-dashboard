@@ -263,3 +263,5 @@ with cc2:
     fig_r.add_hline(y=lcl_r, line_color="red", line_dash="dash", annotation_text="LCL")
     
     st.plotly_chart(style_fig(fig_r, "Carte R (Étendue)"), use_container_width=True)
+with tab3:
+    show_control_charts(...)
